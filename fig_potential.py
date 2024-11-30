@@ -88,7 +88,12 @@ def create_potential_figure():
 
     # 更新佈局
     fig.update_layout(
-        title="New York City Tourism Revenue and Safety Score Comparison",
+        title=dict(
+        text="NYC Tourism Revenue vs. Crime Score",
+        font=dict(size=15),
+        x=0.5,  # 置中標題
+        y=0.97  # 稍微往下調整
+    ),
         xaxis=dict(
             title="Borough",
             showgrid=True,
@@ -128,7 +133,7 @@ if __name__ == "__main__":
     app = dash.Dash(__name__)
     
     app.layout = html.Div([
-        html.H2("New York City Tourism Revenue and Safety Score Comparison",
+        html.H2("NYC Tourism Revenue vs. Crime Score",
                 style={'text-align': 'left'}),
         dcc.Graph(figure=create_potential_figure())
     ])

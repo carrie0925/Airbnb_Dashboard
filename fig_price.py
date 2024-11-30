@@ -50,11 +50,11 @@ def create_price_figure(selected_boroughs=None):
 
         # 自定義行政區域顏色
         borough_colors = {
-            "Manhattan": "#f9a980",
-            "Brooklyn": "#ede46a",
-            "Queens": "#b6c17d",
-            "Bronx": "#e3b054",
-            "Staten Island": "#e3b054"
+            "Manhattan": "#ff928b",
+            "Brooklyn": "#efe9ae",
+            "Queens": "#cdeac0",
+            "Bronx": "#ffac81",
+            "Staten Island": "#fec3ab"
         }
 
         # 構造圖表
@@ -87,7 +87,7 @@ def create_price_figure(selected_boroughs=None):
         # 更新圖表格式
         fig.update_layout(
             title=dict(
-                text="Average Price and Number of Properties by Borough",
+                text="Average Price & Property Count by Borough",
                 font=dict(size=20)
             ),
             xaxis=dict(
@@ -109,6 +109,16 @@ def create_price_figure(selected_boroughs=None):
                 side="right",
                 showgrid=False,
                 zeroline=False
+            ),
+              legend=dict(
+                title="",
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="center",
+                x=0.5,
+                font=dict(size=12),
+                tracegroupgap=50
             ),
             showlegend=False,  # 完全禁用圖例
             template="plotly_white",

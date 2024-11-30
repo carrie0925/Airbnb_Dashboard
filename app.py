@@ -74,13 +74,13 @@ app.layout = html.Div([
                     dcc.Graph(
                         figure=create_crime_figure(),
                         config={"displayModeBar": False},
-                        style={"height": "330px", "width": "550px"}
+                        style={"height": "380px", "width": "520px"}
                     ),
                     dcc.Graph(
                         id='price-graph',
                         figure=create_price_figure(),
                         config={"displayModeBar": False},
-                        style={"height": "330px", "width": "550px"}
+                        style={"height": "380px", "width": "520px"}
                     ),
                 ], style={"display": "flex", "gap": "10px", "marginBottom": "10px"}),
 
@@ -88,13 +88,13 @@ app.layout = html.Div([
                     dcc.Graph(
                         figure=create_potential_figure(),
                         config={"displayModeBar": False},
-                        style={"height": "330px", "width": "550px"}
+                        style={"height": "380px", "width": "520px"}
                     ),
                     dcc.Graph(
                         id='room-graph',
                         figure=create_room_figure(),
                         config={"displayModeBar": False},
-                        style={"height": "330px", "width": "550px"}
+                        style={"height": "380px", "width": "520px"}
                     ),
                 ], style={"display": "flex", "gap": "10px"})
             ], style={"width": "75%"}),

@@ -52,11 +52,11 @@ def create_room_figure(selected_boroughs=None):
 
         # 自定義色票
         custom_colors = {
-            "Manhattan": "#f9a980",
-            "Brooklyn": "#ede46a",
-            "Queens": "#b6c17d",
-            "Bronx": "#e3b054",
-            "Staten Island": "#e3b054"
+            "Manhattan": "#ff928b",
+            "Brooklyn": "#efe9ae",
+            "Queens": "#cdeac0",
+            "Bronx": "#ffac81",
+            "Staten Island": "#fec3a6"
         }
 
         # 創建圖表
@@ -84,7 +84,7 @@ def create_room_figure(selected_boroughs=None):
 
         # 圖表美化
         fig.update_layout(
-            showlegend=False,  # 禁用圖例
+            showlegend=False,
             yaxis=dict(
                 range=[0, 1000],
                 title=dict(text="Price per Night ($)", font=dict(size=14)),
@@ -106,7 +106,6 @@ def create_room_figure(selected_boroughs=None):
             margin=dict(t=50, b=50, l=50, r=50)
         )
 
-        # 更新 trace 設定
         fig.update_traces(
             marker=dict(line=dict(width=1.5)),
             boxmean=False,
@@ -134,11 +133,59 @@ def create_room_figure(selected_boroughs=None):
         )
         return fig
 
+# 獨立運行時的測試版面配置
 if __name__ == "__main__":
     app = dash.Dash(__name__)
+    
     app.layout = html.Div([
         html.H2("Room Type Analysis", 
-                style={'text-align': 'center'}),
-        dcc.Graph(figure=create_room_figure())
-    ])
+                style={'text-align': 'center', 'margin-bottom': '20px'}),
+        
+        html.Div([
+            html.Label("Select Boroughs:", style={
+                'font-size': '16px',
+                'font-weight': 'bold',
+                'margin-bottom': '10px'
+            }),
+            dcc.Checklist(
+                id="borough-checklist",
+                options=[
+                    {"label": "Manhattan", "value": "Manhattan"},
+                    {"label": "Brooklyn", "value": "Brooklyn"},
+                    {"label": "Queens", "value": "Queens"},
+                    {"label": "Bronx", "value": "Bronx"},
+                    {"label": "Staten Island", "value": "Staten Island"}
+                ],
+                value=[],
+                inline=True,
+                style={'font-size': '14px', 'margin': '10px'}
+            )
+        ], style={
+            'padding': '20px',
+            'background-color': '#f5f5f5',
+            'border-radius': '10px',
+            'margin-bottom': '20px'
+        }),
+        
+        dcc.Graph(
+            id="boxplot-graph",
+            figure=create_room_figure(),
+            style={
+                'border': '1px solid #ddd',
+                'border-radius': '10px',
+                'box-shadow': '0 4px 8px rgba(0, 0, 0, 0.1)'
+            }
+        )
+    ], style={
+        'padding': '20px',
+        'background-color': '#fafafa'
+    })
+    
+    @app.callback(
+        Output("boxplot-graph", "figure"),
+        [Input("borough-checklist", "value")]
+    )
+    def update_boxplot(selected_boroughs):
+        return create_room_figure(selected_boroughs)
+    
     app.run_server(debug=True)
