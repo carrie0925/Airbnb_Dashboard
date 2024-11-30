@@ -44,7 +44,7 @@ def create_potential_figure():
         y=df["crime_score"],
         mode="lines+markers",
         name="Crime Score",
-        line=dict(color="#89cff0", width=2),
+        line=dict(color="#cc987c", width=2),
         marker=dict(size=8),
         hovertemplate="Crime Score: %{y}<br>Borough: %{x}<extra></extra>",
         yaxis="y1"
@@ -56,7 +56,7 @@ def create_potential_figure():
         y=df["tourist_revenue"],
         mode="lines+markers",
         name="Tourism Revenue",
-        line=dict(color="#ff928b", width=2),
+        line=dict(color="#8c7c54", width=2),
         marker=dict(size=8),
         hovertemplate="Tourism Revenue: %{y}<br>Borough: %{x}<extra></extra>",
         yaxis="y2"
@@ -68,7 +68,7 @@ def create_potential_figure():
         y=[avg_crime_score] * len(df),
         mode="lines",
         name="Avg Crime Score",
-        line=dict(color="#89cff0", dash="dash", width=1.5),
+        line=dict(color="#cc987c", dash="dash", width=1.5),
         hovertemplate="Avg Crime Score: %{y}<extra></extra>",
         yaxis="y1",
         showlegend=True
@@ -80,7 +80,7 @@ def create_potential_figure():
         y=[avg_tourism_revenue] * len(df),
         mode="lines",
         name="Avg Tourism Revenue",
-        line=dict(color="#ff928b", dash="dash", width=1.5),
+        line=dict(color="#8c7c54", dash="dash", width=1.5),
         hovertemplate="Avg Tourism Revenue: %{y}<extra></extra>",
         yaxis="y2",
         showlegend=True
@@ -88,7 +88,7 @@ def create_potential_figure():
 
     # 更新佈局
     fig.update_layout(
-        title="Tourism Revenue and Safety Score Comparison",
+        title="New York City Tourism Revenue and Safety Score Comparison",
         xaxis=dict(
             title="Borough",
             showgrid=True,
@@ -107,11 +107,14 @@ def create_potential_figure():
             showgrid=False
         ),
         legend=dict(
+            title="",
             orientation="h",
             yanchor="bottom",
             y=1.02,
             xanchor="center",
-            x=0.5
+            x=0.5,
+            font=dict(size=11),  # 字體大小
+            tracegroupgap=50
         ),
         template="plotly_white",
         height=400,  # 設定固定高度
@@ -126,7 +129,7 @@ if __name__ == "__main__":
     
     app.layout = html.Div([
         html.H2("New York City Tourism Revenue and Safety Score Comparison",
-                style={'text-align': 'center'}),
+                style={'text-align': 'left'}),
         dcc.Graph(figure=create_potential_figure())
     ])
     

@@ -44,9 +44,9 @@ def create_crime_figure():
 
         # 定義自訂顏色
         custom_colors = {
-            "VIOLATION": "#6dd3ce",
-            "MISDEMEANOR": "#89cff0",
-            "FELONY": "#ff928b"
+            "VIOLATION": "#ceba6e",
+            "MISDEMEANOR": "#909880",
+            "FELONY": "#909c54"
         }
 
         # 繪製堆疊長條圖
@@ -81,7 +81,9 @@ def create_crime_figure():
                 yanchor="bottom",
                 y=1.02,
                 xanchor="center",
-                x=0.5
+                x=0.5,
+                font=dict(size=10),  # 字體大小
+                tracegroupgap=50
             ),
             template="plotly_white",
             height=400,  # 固定高度

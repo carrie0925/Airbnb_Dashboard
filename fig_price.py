@@ -43,12 +43,13 @@ def create_price_figure():
 
         # 自定義行政區域顏色
         borough_colors = {
-            "Manhattan": "#ff928b",
-            "Brooklyn": "#ffac81",
-            "Queens": "#fec3a6",
-            "Bronx": "#efe9ae",
-            "Staten Island": "#cdeac0"
-        }
+            "Manhattan": "#f9a980",
+            "Brooklyn": "#ede46a",
+            "Queens": "#b6c17d",
+            "Bronx": "#e3b054",
+            "Staten Island": "#e3b054"
+            }
+
 
         # 構造圖表
         fig = go.Figure()
@@ -98,15 +99,18 @@ def create_price_figure():
                 tickfont=dict(color="#333333", size=12),
                 overlaying="y",
                 side="right",
-                gridcolor='lightgray'
+                showgrid=False,  # 禁用右側 Y 軸的網格線
+                zeroline=False  # 禁用右側 Y 軸的零線
             ),
             legend=dict(
-                title="Metrics",
+                title="",
                 orientation="h",
                 yanchor="bottom",
                 y=1.02,
                 xanchor="center",
-                x=0.5
+                x=0.5,
+                font=dict(size=12),
+                tracegroupgap=50
             ),
             template="plotly_white",
             height=400,

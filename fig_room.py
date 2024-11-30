@@ -45,12 +45,12 @@ def create_room_figure(selected_boroughs=None):
 
         # 自定義色票
         custom_colors = {
-            "Manhattan": "#ff928b",
-            "Brooklyn": "#ffac81",
-            "Queens": "#fec3a6",
-            "Bronx": "#efe9ae",
-            "Staten Island": "#cdeac0"
-        }
+            "Manhattan": "#f9a980",
+            "Brooklyn": "#ede46a",
+            "Queens": "#b6c17d",
+            "Bronx": "#e3b054",
+            "Staten Island": "#e3b054"
+            }
 
         # 根據選擇的行政區過濾數據
         if selected_boroughs and len(selected_boroughs) > 0:
@@ -72,7 +72,7 @@ def create_room_figure(selected_boroughs=None):
                 y="price",
                 title="Price Distribution by Room Type",
                 labels={"room_type": "Room Type", "price": "Price per Night ($)"},
-                color_discrete_sequence=["#87CEFA"],
+                color_discrete_sequence=["#9c9c7c"],
                 hover_data=["listing_id", "host_name"]
             )
 

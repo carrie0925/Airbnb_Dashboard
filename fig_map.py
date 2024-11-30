@@ -41,11 +41,11 @@ def create_map_figure():
 
     # 五大行政區的位置（基於圖片像素座標）
     positions = {
-        "Bronx": (500, 170),
-        "Brooklyn": (400, 580),
-        "Manhattan": (360, 320),
-        "Queens": (600, 410),
-        "Staten Island": (230, 600),
+        "Bronx": (185,55),
+        "Brooklyn": (140, 185),
+        "Manhattan": (120, 110),
+        "Queens": (230, 140),
+        "Staten Island": (55, 220)
     }
 
     # 建立 Plotly 地圖
@@ -57,17 +57,17 @@ def create_map_figure():
             dict(
                 source=img,
                 x=0, y=0, xref="x", yref="y",
-                sizex=1000, sizey=800,  # 圖片尺寸
+                sizex=320, sizey=256,  # 圖片尺寸
                 xanchor="left", yanchor="bottom",
                 layer="below"
             )
         ],
-        xaxis=dict(range=[0, 1000], showgrid=False, zeroline=False, visible=False),
-        yaxis=dict(range=[0, 800], showgrid=False, zeroline=False, visible=False),
+        xaxis=dict(range=[0, 320], showgrid=False, zeroline=False, visible=False),
+        yaxis=dict(range=[0, 256], showgrid=False, zeroline=False, visible=False),
         showlegend=False,
         template="plotly_white",
-        width=1000,
-        height=800,
+        width=320,
+        height=256,
         margin=dict(l=0, r=0, t=0, b=0)  # 移除邊距
     )
 
@@ -77,24 +77,40 @@ def create_map_figure():
             listings_count = data_dict[borough]["listings_count"]
             tourism_value = data_dict[borough]["tourism_value"]
             hover_text = (
-                f"<b style='font-size:20px;'>{borough}</b><br>"
+                f"<b style='font-size:10px;'>{borough}</b><br>"
                 f"Total Listing Count: {listings_count}<br>"
                 f"Expected Tourism Value: ${tourism_value} millions"
             )
             fig_map.add_trace(
                 go.Scatter(
                     x=[pos[0]],
-                    y=[800 - pos[1]],  # Y 軸翻轉以匹配圖片像素座標
+                    y=[256 - pos[1]],
                     mode="markers",
-                    marker=dict(size=15, color="Beige"),
+                    marker=dict(
+                        size=6, 
+                        color="Beige",
+                        line=dict(color="black", width=1)
+                    ),
                     hoverinfo="text",
                     hovertext=hover_text,
                     hoverlabel=dict(
-                        font=dict(size=20, color="black"),
+                        font=dict(size=12),
                         bgcolor="white",
-                    )
-                )
+                        bordercolor="black",
+                    ),
+                    customdata=[[
+                        borough,
+                        listings_count,
+                        tourism_value
+                    ]],
+                    name=borough
+    )
             )
+    fig_map.update_layout(
+        hoverdistance=5,  # 減少hover觸發距離
+        hovermode='closest',  # 確保只顯示最近的點的資訊
+        clickmode='event'  # 啟用點擊事件
+    )
     return fig_map
 
 # 如果直接運行此文件，則啟動獨立的 Dash 應用
