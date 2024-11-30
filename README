@@ -1,22 +1,48 @@
-# pip install -r requirements.txt
+# Airbnb Dashboard
 
-DB_PATH=data/data_final.db
-IMAGE_PATH=images/map_final.jpg
+This project provides an interactive dashboard for Airbnb data analysis in New York City. The dashboard includes visualizations for crime rates, pricing trends, room types, and potential tourist revenue in different boroughs of NYC.
 
-# python app.py
+## Features
+- Interactive map visualizing borough-level data.
+- Bar and line charts showing average prices and property counts.
+- Crime rate comparisons across boroughs.
+- Insights into room types and their pricing.
 
-# 讀取路徑設置
-# import dash
-# from dash import dcc, html
-# import pandas as pd
-# import plotly.graph_objects as go
-# import sqlite3
-# from dotenv import load_dotenv
-# import os
+---
 
-# # 載入環境變數
-# load_dotenv()
+## Requirements
 
-# # 資料庫連接與查詢
-# db_path = os.getenv("DB_PATH")  # 替換為您的資料庫路徑
-# conn = sqlite3.connect(db_path)
+Before you begin, ensure you have the following installed:
+- Python 3.8 or later
+- SQLite (if you plan to modify the database)
+- A web browser to view the dashboard (Google Chrome recommended)
+
+---
+
+## Installation
+
+### 1. Clone the Repository
+git clone https://github.com/carrie0925/Airbnb_Dashboard.git
+cd Airbnb_Dashboard
+
+
+### 2. Install Dependencies
+pip install -r requirements.txt
+
+### 3. Set Up Environment Variables
+DB_PATH=<path to your database file>
+IMAGE_PATH=<path to your image files>
+
+-For example:
+DB_PATH=C:/Users/YourUsername/Airbnb_Dashboard/data_final.db
+IMAGE_PATH=C:/Users/YourUsername/Airbnb_Dashboard/image/map_final.jpg
+
+
+
+## Running the Application
+### 1.Open dashboard
+python app.py
+
+### 2.Access the Dashboard
+-http://127.0.0.1:8050/
+
