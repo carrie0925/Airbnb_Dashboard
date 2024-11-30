@@ -2,22 +2,26 @@
 
 This project provides an interactive dashboard for Airbnb data analysis in New York City. The dashboard includes visualizations for crime rates, pricing trends, room types, and potential tourist revenue in different boroughs of NYC.
 
+![Airbnb Logo](image/airbnb_logo.png)
+
+---
+
 ## Features
 
-- Interactive map visualizing borough-level data.
-- Bar and line charts showing average prices and property counts.
-- Crime rate comparisons across boroughs.
-- Insights into room types and their pricing.
+- 🗺️ Interactive Map: Visualizes borough-level data.
+- 📊 Bar and Line Charts: Displays average prices and property counts.
+- 🏙️ Crime Rate Comparisons: Highlights differences across boroughs.
+- 🏡 Room Type Insights: Analyzes room types and pricing trends.
 
 ---
 
 ## Requirements
 
-Before you begin, ensure you have the following installed:
+Before starting, ensure you have the following installed:
 
-- Python 3.8 or later
-- SQLite (if you plan to modify the database)
-- A web browser to view the dashboard (Google Chrome recommended)
+- **Python 3.8 or later**
+- **SQLite** (if modifying the database)
+- **Web Browser** (Chrome recommended)
 
 ---
 
