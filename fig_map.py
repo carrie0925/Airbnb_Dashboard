@@ -1,6 +1,5 @@
 import dash
 from dash import dcc, html
-from dash.dependencies import Input, Output
 import pandas as pd
 import plotly.graph_objects as go
 from PIL import Image
@@ -8,64 +7,47 @@ import sqlite3
 from dotenv import load_dotenv
 import os
 
+def create_map_figure():
+    """創建地圖圖表的函數"""
+    # read env path
+    dotenv_path = os.getenv("DOTENV_PATH")
+    load_dotenv(dotenv_path=dotenv_path)
+    db_path = os.getenv("DB_PATH")
+    image_path = os.getenv("IMAGE_PATH")
 
-# read env path
-dotenv_path = os.getenv("DOTENV_PATH")
-load_dotenv(dotenv_path=dotenv_path)
-db_path = os.getenv("DB_PATH")
-image_path = os.getenv("IMAGE_PATH")
+    img = Image.open(image_path)
+    conn = sqlite3.connect(db_path)
 
-img = Image.open(image_path)
-conn = sqlite3.connect(db_path)
+    # 查詢行政區房源數和觀光價值
+    query = """
+    SELECT 
+        b.borough_name AS borough, 
+        COUNT(l.listing_id) AS listings_count,
+        b.tourist_revenue AS tourism_value
+    FROM 
+        borough b
+    JOIN 
+        locations loc ON b.borough_id = loc.borough_id
+    JOIN 
+        listings l ON loc.listing_id = l.listing_id
+    GROUP BY 
+        b.borough_id, b.borough_name;
+    """
+    df = pd.read_sql_query(query, conn)
+    conn.close()
 
-# 查詢行政區房源數和觀光價值
-query = """
-SELECT 
-    b.borough_name AS borough, 
-    COUNT(l.listing_id) AS listings_count,
-    b.tourist_revenue AS tourism_value
-FROM 
-    borough b
-JOIN 
-    locations loc ON b.borough_id = loc.borough_id
-JOIN 
-    listings l ON loc.listing_id = l.listing_id
-GROUP BY 
-    b.borough_id, b.borough_name;
-"""
-df = pd.read_sql_query(query, conn)
-conn.close()
+    # 提取資料，轉換為字典結構
+    data_dict = df.set_index("borough").to_dict(orient="index")
 
-# 提取資料，轉換為字典結構
-data_dict = df.set_index("borough").to_dict(orient="index")
+    # 五大行政區的位置（基於圖片像素座標）
+    positions = {
+        "Bronx": (500, 170),
+        "Brooklyn": (400, 580),
+        "Manhattan": (360, 320),
+        "Queens": (600, 410),
+        "Staten Island": (230, 600),
+    }
 
-# 五大行政區的位置（基於圖片像素座標）
-positions = {
-    "Bronx": (500, 170),
-    "Brooklyn": (400, 580),
-    "Manhattan": (360, 320),
-    "Queens": (600, 410),
-    "Staten Island": (230, 600),
-}
-
-# Dash 應用初始化
-app = dash.Dash(__name__)
-
-app.layout = html.Div([
-    html.H1("紐約市五大行政區互動地圖", style={"text-align": "center"}),
-    dcc.Graph(
-        id="interactive-map",
-        config={"scrollZoom": False},  # 禁止滾輪縮放
-        style={"width": "1000px", "height": "800px", "margin": "auto"}
-    )
-])
-
-
-@app.callback(
-    Output("interactive-map", "figure"),
-    Input("interactive-map", "id")
-)
-def update_map(_):
     # 建立 Plotly 地圖
     fig_map = go.Figure()
 
@@ -86,6 +68,7 @@ def update_map(_):
         template="plotly_white",
         width=1000,
         height=800,
+        margin=dict(l=0, r=0, t=0, b=0)  # 移除邊距
     )
 
     # 添加行政區互動點
@@ -107,15 +90,23 @@ def update_map(_):
                     hoverinfo="text",
                     hovertext=hover_text,
                     hoverlabel=dict(
-                        font=dict(size=20, color="black"),  # 放大字體，設定文字顏色
-                        bgcolor="white",  # 背景色
+                        font=dict(size=20, color="black"),
+                        bgcolor="white",
                     )
                 )
             )
     return fig_map
 
-
-# 啟動應用
+# 如果直接運行此文件，則啟動獨立的 Dash 應用
 if __name__ == "__main__":
+    app = dash.Dash(__name__)
+    app.layout = html.Div([
+        html.H1("紐約市五大行政區互動地圖", style={"text-align": "center"}),
+        dcc.Graph(
+            id="interactive-map",
+            figure=create_map_figure(),
+            config={"scrollZoom": False},
+            style={"width": "1000px", "height": "800px", "margin": "auto"}
+        )
+    ])
     app.run_server(debug=True)
-
