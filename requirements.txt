@@ -1,0 +1,12 @@
+pandas
+numpy
+
+plotly
+dash
+dash-bootstrap-components
+pandas
+sqlite3
+python-dotenv
+
+#deploy
+gunicorn

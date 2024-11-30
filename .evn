@@ -1,0 +1,6 @@
+# 環境變數
+
+DB_PATH=C:/Users/CARRIE/Desktop/NTHU/DDS/4.final_project/Airbnb_Dashboard/data_final.db
+IMAGE_PATH=C:/Users/CARRIE/Desktop/NTHU/DDS/4.final_project/Airbnb_Dashboard/map_final.jpg
+SECRET_KEY=your_secret_key_here
+FLASK_ENV=development
