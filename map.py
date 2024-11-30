@@ -5,15 +5,17 @@ import pandas as pd
 import plotly.graph_objects as go
 from PIL import Image
 import sqlite3
+from dotenv import load_dotenv
 import os
 
-os.chdir("C:/Users/CARRIE/Desktop/NTHU/DDS/4.final_project/Airbnb_Dashboard")
 
-# 加載圖片
-img = Image.open("map_final.jpg")
+# read env path
+dotenv_path = os.getenv("DOTENV_PATH")
+load_dotenv(dotenv_path=dotenv_path)
+db_path = os.getenv("DB_PATH")
+image_path = os.getenv("IMAGE_PATH")
 
-# 資料庫連接與查詢
-db_path = "C:/Users/CARRIE/Desktop/NTHU/DDS/4.final_project/Airbnb_Dashboard/data_final.db"  # 替換為您的資料庫路徑
+img = Image.open(image_path)
 conn = sqlite3.connect(db_path)
 
 # 查詢行政區房源數和觀光價值

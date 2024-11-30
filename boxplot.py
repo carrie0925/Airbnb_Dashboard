@@ -3,9 +3,12 @@ from dash import dcc, html, Input, Output
 import pandas as pd
 import plotly.express as px
 import sqlite3
+from dotenv import load_dotenv
+import os
 
-# 資料庫連接與查詢
-db_path = "C:/Users/CARRIE/Desktop/NTHU/DDS/4.final_project/Airbnb_Dashboard/data_final.db"  # 替換為您的資料庫路徑
+load_dotenv()
+
+db_path = os.getenv("DB_PATH")
 conn = sqlite3.connect(db_path)
 
 query = """
