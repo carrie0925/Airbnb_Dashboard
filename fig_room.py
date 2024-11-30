@@ -1,5 +1,5 @@
 import dash
-from dash import dcc, html, Input, Output
+from dash import dcc, html
 import pandas as pd
 import plotly.express as px
 import sqlite3
@@ -19,6 +19,7 @@ def create_room_figure(selected_boroughs=None):
             
         conn = sqlite3.connect(db_path)
         
+        # Base query
         query = """
         SELECT 
             b.borough_name AS borough,
@@ -33,9 +34,15 @@ def create_room_figure(selected_boroughs=None):
         JOIN 
             borough b ON loc.borough_id = b.borough_id
         JOIN
-            hosts h ON l.host_id = h.host_id;
+            hosts h ON l.host_id = h.host_id
+        WHERE 1=1
         """
         
+        # Add borough filtering if selections exist
+        if selected_boroughs and len(selected_boroughs) > 0:
+            borough_list = "', '".join(selected_boroughs)
+            query += f" AND b.borough_name IN ('{borough_list}')"
+            
         df = pd.read_sql_query(query, conn)
         conn.close()
 
@@ -50,11 +57,10 @@ def create_room_figure(selected_boroughs=None):
             "Queens": "#b6c17d",
             "Bronx": "#e3b054",
             "Staten Island": "#e3b054"
-            }
+        }
 
-        # 根據選擇的行政區過濾數據
+        # 創建圖表
         if selected_boroughs and len(selected_boroughs) > 0:
-            df = df[df["borough"].isin(selected_boroughs)]
             fig = px.box(
                 df,
                 x="room_type",
@@ -78,6 +84,7 @@ def create_room_figure(selected_boroughs=None):
 
         # 圖表美化
         fig.update_layout(
+            showlegend=False,  # 禁用圖例
             yaxis=dict(
                 range=[0, 1000],
                 title=dict(text="Price per Night ($)", font=dict(size=14)),
@@ -96,17 +103,10 @@ def create_room_figure(selected_boroughs=None):
             plot_bgcolor="#ffffff",
             paper_bgcolor="#ffffff",
             height=400,
-            margin=dict(t=50, b=50, l=50, r=50),
-            legend=dict(
-                title="Borough",
-                orientation="h",
-                yanchor="bottom",
-                y=1.02,
-                xanchor="center",
-                x=0.5
-            )
+            margin=dict(t=50, b=50, l=50, r=50)
         )
 
+        # 更新 trace 設定
         fig.update_traces(
             marker=dict(line=dict(width=1.5)),
             boxmean=False,
@@ -134,68 +134,11 @@ def create_room_figure(selected_boroughs=None):
         )
         return fig
 
-def create_room_layout():
-    """創建房型分析頁面布局"""
-    try:
-        load_dotenv()
-        conn = sqlite3.connect(os.getenv("DB_PATH"))
-        df = pd.read_sql_query("SELECT DISTINCT borough_name FROM borough", conn)
-        conn.close()
-        
-        return html.Div([
-            html.H2("Room Type Analysis", 
-                    style={'text-align': 'center', 'margin-bottom': '20px'}),
-            
-            html.Div([
-                html.Label("Select Boroughs:", style={
-                    'font-size': '16px',
-                    'font-weight': 'bold',
-                    'margin-bottom': '10px'
-                }),
-                dcc.Checklist(
-                    id="borough-checklist",
-                    options=[{"label": borough, "value": borough} 
-                            for borough in df['borough_name']],
-                    value=[],
-                    inline=True,
-                    style={'font-size': '14px', 'margin': '10px'}
-                )
-            ], style={
-                'padding': '20px',
-                'background-color': '#f5f5f5',
-                'border-radius': '10px',
-                'margin-bottom': '20px'
-            }),
-            
-            dcc.Graph(
-                id="boxplot-graph",
-                figure=create_room_figure(),
-                style={
-                    'border': '1px solid #ddd',
-                    'border-radius': '10px',
-                    'box-shadow': '0 4px 8px rgba(0, 0, 0, 0.1)'
-                }
-            )
-        ], style={
-            'padding': '20px',
-            'background-color': '#fafafa'
-        })
-    
-    except Exception as e:
-        print(f"Error creating layout: {e}")
-        return html.Div("Error loading layout. Please check database connection.")
-
-# 如果直接運行此文件，則啟動獨立的 Dash 應用
 if __name__ == "__main__":
     app = dash.Dash(__name__)
-    
-    app.layout = create_room_layout()
-    
-    @app.callback(
-        Output("boxplot-graph", "figure"),
-        [Input("borough-checklist", "value")]
-    )
-    def update_boxplot(selected_boroughs):
-        return create_room_figure(selected_boroughs)
-    
+    app.layout = html.Div([
+        html.H2("Room Type Analysis", 
+                style={'text-align': 'center'}),
+        dcc.Graph(figure=create_room_figure())
+    ])
     app.run_server(debug=True)

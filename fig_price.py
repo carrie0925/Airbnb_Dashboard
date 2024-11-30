@@ -6,7 +6,7 @@ import sqlite3
 from dotenv import load_dotenv
 import os
 
-def create_price_figure():
+def create_price_figure(selected_boroughs=None):
     """創建房價和房源數量分析圖表"""
     try:
         # 載入環境變數
@@ -19,6 +19,7 @@ def create_price_figure():
             
         conn = sqlite3.connect(db_path)
         
+        # Base query
         query = """
         SELECT 
             b.borough_name AS borough,
@@ -31,12 +32,18 @@ def create_price_figure():
         JOIN 
             borough b ON loc.borough_id = b.borough_id
         WHERE 
-            b.borough_name IN ('Bronx', 'Brooklyn', 'Manhattan', 'Queens', 'Staten Island')
-            AND l.price IS NOT NULL
+            l.price IS NOT NULL
             AND l.price > 0
-        GROUP BY 
-            b.borough_name;
         """
+        
+        # Add borough filtering if selections exist
+        if selected_boroughs and len(selected_boroughs) > 0:
+            borough_list = "', '".join(selected_boroughs)
+            query += f" AND b.borough_name IN ('{borough_list}')"
+        else:
+            query += " AND b.borough_name IN ('Bronx', 'Brooklyn', 'Manhattan', 'Queens', 'Staten Island')"
+            
+        query += " GROUP BY b.borough_name;"
         
         df = pd.read_sql_query(query, conn)
         conn.close()
@@ -48,8 +55,7 @@ def create_price_figure():
             "Queens": "#b6c17d",
             "Bronx": "#e3b054",
             "Staten Island": "#e3b054"
-            }
-
+        }
 
         # 構造圖表
         fig = go.Figure()
@@ -61,6 +67,7 @@ def create_price_figure():
             marker_color=[borough_colors[borough] for borough in df['borough']],
             name='Number of Properties',
             yaxis='y',
+            showlegend=False,
             hovertemplate="Borough: %{x}<br>Properties: %{y:,}<extra></extra>"
         ))
 
@@ -73,6 +80,7 @@ def create_price_figure():
             marker=dict(color='#000000', size=8),
             name='Average Price ($)',
             yaxis='y2',
+            showlegend=False,
             hovertemplate="Borough: %{x}<br>Avg Price: $%{y:,.2f}<extra></extra>"
         ))
 
@@ -99,19 +107,10 @@ def create_price_figure():
                 tickfont=dict(color="#333333", size=12),
                 overlaying="y",
                 side="right",
-                showgrid=False,  # 禁用右側 Y 軸的網格線
-                zeroline=False  # 禁用右側 Y 軸的零線
+                showgrid=False,
+                zeroline=False
             ),
-            legend=dict(
-                title="",
-                orientation="h",
-                yanchor="bottom",
-                y=1.02,
-                xanchor="center",
-                x=0.5,
-                font=dict(size=12),
-                tracegroupgap=50
-            ),
+            showlegend=False,  # 完全禁用圖例
             template="plotly_white",
             height=400,
             margin=dict(l=50, r=50, t=80, b=50)
@@ -134,14 +133,11 @@ def create_price_figure():
         )
         return fig
 
-# 如果直接運行此文件，則啟動獨立的 Dash 應用
 if __name__ == "__main__":
     app = dash.Dash(__name__)
-    
     app.layout = html.Div([
         html.H2("Price Analysis by Borough", 
                 style={'text-align': 'center'}),
         dcc.Graph(figure=create_price_figure())
     ])
-    
     app.run_server(debug=True)

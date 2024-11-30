@@ -77,6 +77,7 @@ app.layout = html.Div([
                         style={"height": "330px", "width": "550px"}
                     ),
                     dcc.Graph(
+                        id='price-graph',
                         figure=create_price_figure(),
                         config={"displayModeBar": False},
                         style={"height": "330px", "width": "550px"}
@@ -90,6 +91,7 @@ app.layout = html.Div([
                         style={"height": "330px", "width": "550px"}
                     ),
                     dcc.Graph(
+                        id='room-graph',
                         figure=create_room_figure(),
                         config={"displayModeBar": False},
                         style={"height": "330px", "width": "550px"}
@@ -221,16 +223,17 @@ def generate_borough_cards(boroughs):
         ]) for b in boroughs
     ], style={'display': 'flex', 'flexDirection': 'column', 'gap': '5px', 'maxHeight': '280px','overflowY':'auto'})
 
-
 @app.callback(
     [Output('selected-boroughs-store', 'data'),
-     Output('selected-boroughs', 'children')],
+     Output('selected-boroughs', 'children'),
+     Output('price-graph', 'figure'),
+     Output('room-graph', 'figure')],
     [Input('nyc-map', 'clickData')],
     [State('selected-boroughs-store', 'data')]
 )
 def update_selected_boroughs(clickData, current_selections):
     if clickData is None:
-        return current_selections, generate_borough_cards(current_selections)
+        return current_selections, generate_borough_cards(current_selections), create_price_figure(), create_room_figure()
     
     clicked_borough = clickData['points'][0]['customdata'][0]
     listings_count = clickData['points'][0]['customdata'][1]
@@ -250,13 +253,23 @@ def update_selected_boroughs(clickData, current_selections):
     else:
         current_selections.append(borough_data)
     
+    # Get selected borough names for the graphs
+    selected_borough_names = [b['name'] for b in current_selections]
+    
+    # Create updated figures
+    price_fig = create_price_figure(selected_borough_names)
+    room_fig = create_room_figure(selected_borough_names)
+    
     cards = generate_borough_cards(current_selections)
     
-    return current_selections, cards
+    # 修正：返回所有四個值
+    return current_selections, cards, price_fig, room_fig
 
 @app.callback(
     [Output('selected-boroughs-store', 'data', allow_duplicate=True),
-     Output('selected-boroughs', 'children', allow_duplicate=True)],
+     Output('selected-boroughs', 'children', allow_duplicate=True),
+     Output('price-graph', 'figure', allow_duplicate=True),
+     Output('room-graph', 'figure', allow_duplicate=True)],
     [Input({'type': 'close-button', 'index': ALL}, 'n_clicks')],
     [State('selected-boroughs-store', 'data')],
     prevent_initial_call=True
@@ -273,9 +286,16 @@ def remove_borough_card(n_clicks, current_selections):
     borough_to_remove = button_id['index']
     
     updated_selections = [b for b in current_selections if b['name'] != borough_to_remove]
+    selected_borough_names = [b['name'] for b in updated_selections]
+    
+    # Create updated figures
+    price_fig = create_price_figure(selected_borough_names)
+    room_fig = create_room_figure(selected_borough_names)
+    
     cards = generate_borough_cards(updated_selections)
     
-    return updated_selections, cards
+    # 修正：返回所有四個值
+    return updated_selections, cards, price_fig, room_fig
 
 if __name__ == '__main__':
     app.run_server(debug=True)
