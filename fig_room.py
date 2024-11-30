@@ -1,5 +1,6 @@
 import dash
 from dash import dcc, html
+from dash.dependencies import Input, Output
 import pandas as pd
 import plotly.express as px
 import sqlite3
@@ -86,20 +87,19 @@ def create_room_figure(selected_boroughs=None):
         fig.update_layout(
             showlegend=False,
             yaxis=dict(
-                range=[0, 1000],
+                range=[0, 2800],
                 title=dict(text="Price per Night ($)", font=dict(size=14)),
-                gridcolor="rgba(200,200,200,0.2)",
+                gridcolor="rgba(150, 150, 150, 0.35)",
                 tickfont=dict(size=12)
             ),
             xaxis=dict(
-                title=dict(text="Room Type", font=dict(size=14)),
+                title=dict(text=""),
                 tickfont=dict(size=12)
             ),
             title=dict(
-                font=dict(size=20),
+                font=dict(size=18),
                 x=0.5
             ),
-            font=dict(family="Arial, sans-serif"),
             plot_bgcolor="#ffffff",
             paper_bgcolor="#ffffff",
             height=400,

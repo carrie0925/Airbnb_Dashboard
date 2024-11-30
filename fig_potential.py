@@ -44,7 +44,7 @@ def create_potential_figure():
         y=df["crime_score"],
         mode="lines+markers",
         name="Crime Score",
-        line=dict(color="#cc987c", width=2),
+        line=dict(color="#8C4A2F", width=2),
         marker=dict(size=8),
         hovertemplate="Crime Score: %{y}<br>Borough: %{x}<extra></extra>",
         yaxis="y1"
@@ -56,7 +56,7 @@ def create_potential_figure():
         y=df["tourist_revenue"],
         mode="lines+markers",
         name="Tourism Revenue",
-        line=dict(color="#8c7c54", width=2),
+        line=dict(color="#B5651D", width=2),
         marker=dict(size=8),
         hovertemplate="Tourism Revenue: %{y}<br>Borough: %{x}<extra></extra>",
         yaxis="y2"
@@ -68,7 +68,7 @@ def create_potential_figure():
         y=[avg_crime_score] * len(df),
         mode="lines",
         name="Avg Crime Score",
-        line=dict(color="#cc987c", dash="dash", width=1.5),
+        line=dict(color="#8C4A2F", dash="dash", width=1.5),
         hovertemplate="Avg Crime Score: %{y}<extra></extra>",
         yaxis="y1",
         showlegend=True
@@ -80,7 +80,7 @@ def create_potential_figure():
         y=[avg_tourism_revenue] * len(df),
         mode="lines",
         name="Avg Tourism Revenue",
-        line=dict(color="#8c7c54", dash="dash", width=1.5),
+        line=dict(color="#B5651D", dash="dash", width=1.5),
         hovertemplate="Avg Tourism Revenue: %{y}<extra></extra>",
         yaxis="y2",
         showlegend=True
@@ -89,21 +89,17 @@ def create_potential_figure():
     # 更新佈局
     fig.update_layout(
         title=dict(
-        text="NYC Tourism Revenue vs. Crime Score",
-        font=dict(size=15),
+        text="Tourism Revenue vs. Crime Score",
+        font=dict(size=18),
         x=0.5,  # 置中標題
-        y=0.97  # 稍微往下調整
+        xanchor='center',
+        y=0.973
     ),
-        xaxis=dict(
-            title="Borough",
-            showgrid=True,
-            gridcolor="lightgray"
-        ),
         yaxis=dict(
             title="Crime Score",
             side="left",
             showgrid=True,
-            gridcolor="lightgray",
+            gridcolor="rgba(150, 150, 150, 0.35)",
         ),
         yaxis2=dict(
             title="Tourism Revenue",
@@ -115,7 +111,7 @@ def create_potential_figure():
             title="",
             orientation="h",
             yanchor="bottom",
-            y=1.02,
+            y=-0.35,
             xanchor="center",
             x=0.5,
             font=dict(size=11),  # 字體大小

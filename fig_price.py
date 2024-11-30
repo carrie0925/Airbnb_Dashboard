@@ -76,30 +76,33 @@ def create_price_figure(selected_boroughs=None):
             x=df['borough'],
             y=df['AveragePrice'],
             mode='lines+markers',
-            line=dict(color='#333333', width=2),
-            marker=dict(color='#000000', size=8),
+            line=dict(color='gray', width=2),
+            marker=dict(color='gray', size=6),
             name='Average Price ($)',
             yaxis='y2',
             showlegend=False,
-            hovertemplate="Borough: %{x}<br>Avg Price: $%{y:,.2f}<extra></extra>"
+            hovertemplate="Borough: %{x}<br>Avg Price: $%{y:,.2f}<extra></extra>",
+            hoverlabel=dict(
+                bgcolor="gray",  
+                font=dict(
+                    color="white",  
+                    size=12         
+                ) 
+            )
         ))
 
         # 更新圖表格式
         fig.update_layout(
             title=dict(
                 text="Average Price & Property Count by Borough",
-                font=dict(size=20)
-            ),
-            xaxis=dict(
-                title="Boroughs",
-                titlefont=dict(size=14),
-                tickfont=dict(size=12)
+                x=0.5,
+                font=dict(size=18)
             ),
             yaxis=dict(
                 title="Number of Properties",
                 titlefont=dict(color="#333333"),
                 tickfont=dict(color="#333333", size=12),
-                gridcolor='lightgray'
+                gridcolor='rgba(150, 150, 150, 0.35)'
             ),
             yaxis2=dict(
                 title="Average Price ($)",
@@ -110,16 +113,16 @@ def create_price_figure(selected_boroughs=None):
                 showgrid=False,
                 zeroline=False
             ),
-              legend=dict(
-                title="",
-                orientation="h",
-                yanchor="bottom",
-                y=1.02,
-                xanchor="center",
-                x=0.5,
-                font=dict(size=12),
-                tracegroupgap=50
-            ),
+            #   legend=dict(
+            #     title="",
+            #     orientation="h",
+            #     yanchor="bottom",
+            #     y=1.02,
+            #     xanchor="center",
+            #     x=0.5,
+            #     font=dict(size=12),
+            #     tracegroupgap=50
+            # ),
             showlegend=False,  # 完全禁用圖例
             template="plotly_white",
             height=400,

@@ -91,7 +91,7 @@ def create_map_figure():
                         color="Beige",
                         line=dict(color="black", width=1)
                     ),
-                    hoverinfo="text",
+                    hoverinfo="none",
                     hovertext=hover_text,
                     hoverlabel=dict(
                         font=dict(size=12),

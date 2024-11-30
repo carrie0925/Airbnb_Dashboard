@@ -44,9 +44,9 @@ def create_crime_figure():
 
         # 定義自訂顏色
         custom_colors = {
-            "VIOLATION": "#ceba6e",
-            "MISDEMEANOR": "#909880",
-            "FELONY": "#909c54"
+            "VIOLATION": "#F5D3B3",
+            "MISDEMEANOR": "#EBC2A0",
+            "FELONY": "#D9A679"
         }
 
         # 繪製堆疊長條圖
@@ -63,12 +63,13 @@ def create_crime_figure():
 
         # 更新佈局
         fig.update_layout(
-            title="Distribution of Crime Types by Borough",
-            barmode="stack",
-            xaxis=dict(
-                title="Borough",
-                tickfont=dict(size=12),
+            title=dict(
+                text="Distribution of Crime Types by Borough",
+                x=0.5,  # 標題置中
+                xanchor='center',
+                font=dict(size=18)  # 可根據需要調整字體大小
             ),
+            barmode="stack",
             yaxis=dict(
                 title="Crime Count",
                 tickvals=[0, 20000, 40000, 60000, 80000, 100000, 120000],
@@ -76,14 +77,12 @@ def create_crime_figure():
                 tickfont=dict(size=12),
             ),
             legend=dict(
-                title="Crime Type",
-                orientation="h",
-                yanchor="bottom",
-                y=1.02,
+                orientation="h",  # 水平排列圖例
+                yanchor="top",
+                y=-0.1,  # 調整圖例的位置，負值代表在圖表下方
                 xanchor="center",
-                x=0.5,
-                font=dict(size=10),  # 字體大小
-                tracegroupgap=50
+                x=0.5,  # 圖例居中
+                font=dict(size=11),
             ),
             template="plotly_white",
             height=400,  # 固定高度
