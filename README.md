@@ -2,8 +2,10 @@
 
 This project provides an interactive dashboard for Airbnb data analysis in New York City. The dashboard includes visualizations for crime rates, pricing trends, room types, and potential tourist revenue in different boroughs of NYC.
 
-<img src="image/airbnb_logo.png" alt="Airbnb Logo" width="200">
-<img src="image/Flag_of_New_York_City.png" alt="NYC Flag" width="300">
+<div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+  <img src="image/airbnb_logo.png" alt="Airbnb Logo" width="150">
+  <img src="image/Flag_of_New_York_City.png" alt="NYC Flag" width="150">
+</div>
 
 ---
 
