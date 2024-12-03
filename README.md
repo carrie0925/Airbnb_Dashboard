@@ -44,9 +44,13 @@ pip install -r requirements.txt
 ### 3. Set Up Environment Variables
 
 DOTENV_PATH=<path to your .env file>
+
 DB_PATH=<path to your database file>
+
 IMAGE_PATH=<path to your image files>
+
 LOGO_PATH=<path to your logo image file>
+
 NYC_PATH=<path to your NYC image file>
 
 -For example:
