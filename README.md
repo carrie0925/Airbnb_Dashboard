@@ -43,14 +43,14 @@ pip install -r requirements.txt
 
 ### 3. Set Up Environment Variables
 
-DOTENV_PATH=<path to your .env file>
-DB_PATH=<path to your database file>
-IMAGE_PATH=<path to your image files>
-LOGO_PATH=<path to your logo image file>
-NYC_SHAPE_PATH=<path to your NYC image file>
+DOTENV_PATH=<path to your .env file>  
+DB_PATH=<path to your .database file>  
+IMAGE_PATH=<path to your .image files>  
+LOGO_PATH=<path to your logo .image file>  
+NYC_PATH=<path to your NYC .image file>
 
--For example:
-DB_PATH=C:/Users/YourUsername/Airbnb_Dashboard/data_final.db
+-For example:  
+DB_PATH=C:/Users/YourUsername/Airbnb_Dashboard/data_final.db  
 IMAGE_PATH=C:/Users/YourUsername/Airbnb_Dashboard/image/map_final.jpg
 
 ## Running the Application
