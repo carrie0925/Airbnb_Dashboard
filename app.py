@@ -70,12 +70,12 @@ app.layout = html.Div([
                 
                 # 地圖區域
                 html.Div([
-                    html.H3("Click dots to see details", style={
+                    html.H3("Click Dots to see Borough details", style={
                         "color": "darkred",
                         "textAlign": "center",
                         "marginBottom": "10px",
                         "marginTop": "1px",
-                        "fontSize": "20px"
+                        "fontSize": "23px"
                     }),
                     # html.P("Click dots to see details", style={
                     #     "textAlign": "center",

@@ -5,7 +5,6 @@ plotly
 dash
 dash-bootstrap-components
 pandas
-sqlite3
 Pillow
 python-dotenv
 
