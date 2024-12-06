@@ -56,7 +56,7 @@ def create_potential_figure():
         y=df["tourist_revenue"],
         mode="lines+markers",
         name="Tourism Revenue",
-        line=dict(color="#B5651D", width=2),
+        line=dict(color="#EA7500", width=2),
         marker=dict(size=8),
         hovertemplate="Tourism Revenue: %{y}<br>Borough: %{x}<extra></extra>",
         yaxis="y2"

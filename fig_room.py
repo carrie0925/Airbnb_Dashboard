@@ -7,7 +7,7 @@ import sqlite3
 from dotenv import load_dotenv
 import os
 
-def create_room_figure(selected_boroughs=None):
+def create_room_figure(selected_boroughs=None, y_range=None):
     """創建房型分析箱型圖"""
     try:
         # 載入環境變數
@@ -83,11 +83,14 @@ def create_room_figure(selected_boroughs=None):
                 hover_data=["listing_id", "host_name"]
             )
 
+        # 設定 y 軸範圍（使用傳入的範圍或默認值）
+        y_axis_range = y_range if y_range is not None else [0, 1000]
+
         # 圖表美化
         fig.update_layout(
             showlegend=False,
             yaxis=dict(
-                range=[0, 2800],
+                range=y_axis_range,  # 使用設定的範圍
                 title=dict(text="Price per Night ($)", font=dict(size=14)),
                 gridcolor="rgba(150, 150, 150, 0.35)",
                 tickfont=dict(size=12)
@@ -102,7 +105,7 @@ def create_room_figure(selected_boroughs=None):
             ),
             plot_bgcolor="#ffffff",
             paper_bgcolor="#ffffff",
-            height=400,
+            height=450,
             margin=dict(t=50, b=50, l=50, r=50)
         )
 
@@ -141,11 +144,13 @@ if __name__ == "__main__":
         html.H2("Room Type Analysis", 
                 style={'text-align': 'center', 'margin-bottom': '20px'}),
         
+        # 行政區選擇
         html.Div([
             html.Label("Select Boroughs:", style={
                 'font-size': '16px',
                 'font-weight': 'bold',
-                'margin-bottom': '10px'
+                'margin-bottom': '10px',
+                'color': 'gray'
             }),
             dcc.Checklist(
                 id="borough-checklist",
@@ -162,30 +167,65 @@ if __name__ == "__main__":
             )
         ], style={
             'padding': '20px',
-            'background-color': '#f5f5f5',
+            'background-color': 'white',
             'border-radius': '10px',
-            'margin-bottom': '20px'
+            'margin-bottom': '20px',
+            'boxShadow': '0 2px 10px rgba(0,0,0,0.1)'
+        }),
+
+        # 價格範圍選擇
+        html.Div([
+            html.Label("Select Price Range:", style={
+                'font-size': '16px',
+                'font-weight': 'bold',
+                'margin-bottom': '10px',
+                'color': 'gray'
+            }),
+            dcc.RangeSlider(
+                id='price-range-slider',
+                min=600,
+                max=2000,
+                step=None,
+                marks={
+                    600: '$600',
+                    800: '$800',
+                    1200: '$1,200',
+                    1600: '$1,600',
+                    2000: '$2,000'
+                },
+                value=[600, 2000]
+            )
+        ], style={
+            'padding': '20px',
+            'background-color': 'white',
+            'border-radius': '10px',
+            'margin-bottom': '20px',
+            'boxShadow': '0 2px 10px rgba(0,0,0,0.1)'
         }),
         
         dcc.Graph(
             id="boxplot-graph",
             figure=create_room_figure(),
             style={
-                'border': '1px solid #ddd',
                 'border-radius': '10px',
-                'box-shadow': '0 4px 8px rgba(0, 0, 0, 0.1)'
+                'box-shadow': '0 4px 8px rgba(0, 0, 0, 0.1)',
+                'background-color': 'white'
             }
         )
     ], style={
         'padding': '20px',
-        'background-color': '#fafafa'
+        'background-color': '#f5f5f5'
     })
     
     @app.callback(
         Output("boxplot-graph", "figure"),
-        [Input("borough-checklist", "value")]
+        [Input("borough-checklist", "value"),
+         Input("price-range-slider", "value")]
     )
-    def update_boxplot(selected_boroughs):
-        return create_room_figure(selected_boroughs)
+    def update_boxplot(selected_boroughs, price_range):
+        return create_room_figure(
+            selected_boroughs=selected_boroughs,
+            y_range=price_range
+        )
     
     app.run_server(debug=True)

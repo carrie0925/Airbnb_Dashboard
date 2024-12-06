@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 import os
 
 def create_crime_figure():
-    """創建犯罪分布堆疊柱狀圖"""
+    """創建犯罪分布堆疊百分比柱狀圖"""
     try:
         # 載入環境變數
         load_dotenv()
@@ -20,16 +20,36 @@ def create_crime_figure():
         conn = sqlite3.connect(db_path)
         
         query = """
+        WITH CrimeCounts AS (
+            SELECT 
+                b.borough_name AS borough,
+                s.crime_level AS crime_type,
+                COUNT(s.Event_id) AS crime_count
+            FROM 
+                borough b
+            LEFT JOIN 
+                security s ON b.borough_id = s.borough_id
+            GROUP BY 
+                b.borough_id, b.borough_name, s.crime_level
+        ),
+        BoroughTotals AS (
+            SELECT 
+                borough,
+                SUM(crime_count) as total_crimes
+            FROM 
+                CrimeCounts
+            GROUP BY 
+                borough
+        )
         SELECT 
-            b.borough_name AS borough,
-            s.crime_level AS crime_type,
-            COUNT(s.Event_id) AS crime_count
+            c.borough,
+            c.crime_type,
+            c.crime_count,
+            CAST(c.crime_count AS FLOAT) / b.total_crimes * 100 as crime_percentage
         FROM 
-            borough b
-        LEFT JOIN 
-            security s ON b.borough_id = s.borough_id
-        GROUP BY 
-            b.borough_id, b.borough_name, s.crime_level;
+            CrimeCounts c
+        JOIN 
+            BoroughTotals b ON c.borough = b.borough;
         """
         
         df = pd.read_sql_query(query, conn)
@@ -41,6 +61,7 @@ def create_crime_figure():
 
         # 轉換資料以適應堆疊長條圖
         pivot_df = df.pivot(index="borough", columns="crime_type", values="crime_count").fillna(0)
+        pivot_pct = df.pivot(index="borough", columns="crime_type", values="crime_percentage").fillna(0)
 
         # 定義自訂顏色
         custom_colors = {
@@ -52,48 +73,66 @@ def create_crime_figure():
         # 繪製堆疊長條圖
         fig = go.Figure()
 
+        # 計算累積值以確定標籤位置
+        y_positions = {borough: 0 for borough in pivot_df.index}
+
         for crime_type in pivot_df.columns:
+            counts = pivot_df[crime_type]
+            percentages = pivot_pct[crime_type]
+            
             fig.add_trace(go.Bar(
                 x=pivot_df.index,
-                y=pivot_df[crime_type],
+                y=counts,
                 name=crime_type,
                 marker=dict(color=custom_colors[crime_type]),
-                hovertemplate="Crime Type: %{x}<br>Count: %{y}<br><extra></extra>",
+                text=[f"{pct:.1f}%" for pct in percentages],  # 添加百分比標籤
+                textposition="inside",  # 在長條圖內顯示標籤
+                insidetextanchor="middle",  # 標籤置中
+                textfont=dict(
+                    color="black",
+                    size=11
+                ),
+                hovertemplate="Borough: %{x}<br>" +
+                            "Crime Type: " + crime_type + "<br>" +
+                            "Count: %{y:,}<br>" +
+                            "<extra></extra>",
             ))
 
         # 更新佈局
         fig.update_layout(
             title=dict(
                 text="Distribution of Crime Types by Borough",
-                x=0.5,  # 標題置中
+                x=0.5,
                 xanchor='center',
-                font=dict(size=18)  # 可根據需要調整字體大小
+                font=dict(size=18)
             ),
             barmode="stack",
             yaxis=dict(
                 title="Crime Count",
-                tickvals=[0, 20000, 40000, 60000, 80000, 100000, 120000],
-                tickformat="",
                 tickfont=dict(size=12),
+                showgrid=True,
+                gridwidth=1,
+                gridcolor='LightGrey'
             ),
             legend=dict(
-                orientation="h",  # 水平排列圖例
+                orientation="h",
                 yanchor="top",
-                y=-0.1,  # 調整圖例的位置，負值代表在圖表下方
+                y=-0.1,
                 xanchor="center",
-                x=0.5,  # 圖例居中
+                x=0.5,
                 font=dict(size=11),
             ),
             template="plotly_white",
-            height=400,  # 固定高度
-            margin=dict(l=50, r=50, t=80, b=50)  # 調整邊距
+            height=400,
+            margin=dict(l=50, r=50, t=80, b=50),
+            showlegend=True,
+            uniformtext=dict(mode="hide", minsize=10)  # 控制標籤的顯示
         )
 
         return fig
     
     except Exception as e:
         print(f"Error creating crime figure: {e}")
-        # 返回一個空的圖表而不是失敗
         fig = go.Figure()
         fig.update_layout(
             title="Error Loading Crime Data",
@@ -106,7 +145,6 @@ def create_crime_figure():
             }]
         )
         return fig
-
 # 如果直接運行此文件，則啟動獨立的 Dash 應用
 if __name__ == "__main__":
     app = dash.Dash(__name__)
