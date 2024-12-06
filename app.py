@@ -231,7 +231,7 @@ app.layout = html.Div([
                 "padding": "15px",
                 "borderRadius": "10px",
                 "boxShadow": "0 2px 10px rgba(0,0,0,0.1)"
-            }),
+            }),   
             html.Div([
                 dcc.Graph(
                     id='room-graph',
@@ -542,6 +542,7 @@ def remove_borough_card(n_clicks, current_selections):
        create_room_figure(selected_borough_names),
        details_content
    )
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)
