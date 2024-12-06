@@ -48,6 +48,7 @@ DB_PATH=<path to your .database file>
 IMAGE_PATH=<path to your .image files>  
 LOGO_PATH=<path to your logo .image file>  
 NYC_PATH=<path to your NYC .image file>
+BOROUGH_IMAGES_PATH=<path to your BOROUGH_IMAGES .image file>
 
 -For example:  
 DB_PATH=C:/Users/YourUsername/Airbnb_Dashboard/data_final.db  
