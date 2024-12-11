@@ -139,7 +139,7 @@ app.layout = html.Div([
                 "padding": "15px",
                 "borderRadius": "10px",
                 "boxShadow": "0 2px 10px rgba(0,0,0,0.1)",
-                "width": "540px"
+                "width": "32%"
             }),
 
             # 中間：選擇的區域列表
@@ -162,20 +162,23 @@ app.layout = html.Div([
                 dcc.Store(id='selected-boroughs-store', data=[])
             ], style={
                 "backgroundColor": "white",
-                "padding": "15px",
+                "padding": "20px",
                 "borderRadius": "10px",
-                "width":"300px",
-                "marginLeft": "20px"
+                "minWidth":"300px",
+                "marginLeft": "2%"
             }),
 
             # 右側：詳細資訊
             html.Div(id="borough-details", style={
                 "backgroundColor": "white",
-                "padding": "15px",
-                "borderRadius": "10px",
-                "boxShadow": "0 2px 10px rgba(0,0,0,0.1)",
+                "padding": "20px",
+                "borderRadius": "12px",
+                "boxShadow": "0 4px 12px rgba(0,0,0,0.1)",
                 "flex": "1",
-                "marginLeft": "20px"
+                "marginLeft": "2%",
+                "width":"39%",
+                "minWidth":"500px",
+
             })
         ], style={
             "display": "flex",
@@ -427,13 +430,15 @@ def update_selected_boroughs(clickData, current_selections):
                     html.Img(
                         src=borough_images[top_borough['name']],
                         style={
-                            "width": "500px",
-                            "height": "400px",
+                            "width": "100%",
+                            "height": "100%",
                             "objectFit": "cover",
-                            "borderRadius": "8px"
+                            "borderRadius": "8px",
+                            "maxHeight": "350px",
+                            "display": "block"
                         }
                     )
-                ], style={"width": "65%"})
+                ], style={"width": "65%","overflow": "hidden"})
             ], style={
                 "display": "flex",
                 "alignItems": "flex-start",
