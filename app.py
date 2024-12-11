@@ -88,7 +88,7 @@ app.layout = html.Div([
             html.Div([
                 html.Div([
                     html.P([
-                        "Welcome, property enthusiast! ",
+                        "Welcome, future host! ",
                         html.Br(),
                         "Click on one or more boroughs on the map to explore Airbnb business and investment insights.",
                         html.Br(),
