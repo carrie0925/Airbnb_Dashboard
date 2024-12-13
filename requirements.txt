@@ -1,12 +1,8 @@
 pandas
 numpy
-
 plotly
 dash
 dash-bootstrap-components
-pandas
-Pillow
+Pillow==9.3.0
 python-dotenv
-
-#deploy
 gunicorn
