@@ -11,7 +11,7 @@ from PIL import Image
 import os
 import json
 
-app = dash.Dash(__name__,assets_folder='assets')
+app = dash.Dash(__name__, assets_folder='assets')
 server = app.server
 
 # 環境變數設置
@@ -95,7 +95,7 @@ app.layout = html.Div([
                 "gap": "15px",
                 "Width": "35%"
             }),
-            
+
             # 總覽資訊
             html.Div([
                 html.Div([
@@ -120,7 +120,7 @@ app.layout = html.Div([
                             "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
                             "marginLeft":"100px",
                             "width":"87%"
-                        })       
+                        })
             ])
         ], style={
             "display": "flex",
@@ -246,7 +246,7 @@ app.layout = html.Div([
                 "padding": "15px",
                 "borderRadius": "10px",
                 "boxShadow": "0 2px 10px rgba(0,0,0,0.1)"
-            }),   
+            }),
             html.Div([
                 dcc.Graph(
                     id='room-graph',
@@ -278,12 +278,12 @@ app.layout = html.Div([
 
 def generate_borough_cards(boroughs):
     if not boroughs:
-        return html.Div("Click on boroughs to see details", 
+        return html.Div("Click on boroughs to see details",
                        style={"textAlign": "center", "color": "#666"})
-    
+
     # 根據 investment_rank 排序
     sorted_boroughs = sorted(boroughs, key=lambda x: x['investment_rank'])
-    
+
     return html.Div([
         html.Div([
             html.Div([
@@ -307,8 +307,8 @@ def generate_borough_cards(boroughs):
                     'color': '#333',
                     'fontSize': '20px'
                 }),
-                html.P([  
-                    "Investment Rank: ", 
+                html.P([
+                    "Investment Rank: ",
                     html.Strong(f"{b['investment_rank']}")
                 ], style={
                     'margin': '0',
@@ -337,9 +337,9 @@ def update_borough_details(selected_borough):
     if not selected_borough:
         return html.Div("Select a borough to see details",
                        style={"textAlign": "center", "color": "gray"})
-    
+
     return html.Div([
-        html.H3("Best Investment Borough", 
+        html.H3("Best Investment Borough",
             style={"fontSize": "28px","textAlign": "left", "color": "#333", "marginBottom": "20px"}),
         html.Div([
             html.P([
@@ -380,9 +380,9 @@ def update_borough_details(selected_borough):
 )
 def update_selected_boroughs(clickData, current_selections):
     best_investment = "Manhattan"
-    details_content = html.Div("Select a borough to see details", 
+    details_content = html.Div("Select a borough to see details",
                              style={"textAlign": "center", "color": "gray"})
-    
+
     borough_image_path = "image"
 
 
@@ -394,14 +394,14 @@ def update_selected_boroughs(clickData, current_selections):
             create_room_figure(),
             update_borough_details(None)
         )
-    
+
     clicked_borough = clickData['points'][0]['customdata'][0]
     listings_count = clickData['points'][0]['customdata'][1]
     tourism_value = clickData['points'][0]['customdata'][2]
-    
+
     investment_rank = BOROUGH_RANKS[clicked_borough]["investment_rank"]
     crime_rank = BOROUGH_RANKS[clicked_borough]["crime_rank"]
-    
+
     borough_data = {
         'name': clicked_borough,
         'listings': listings_count,
@@ -409,27 +409,27 @@ def update_selected_boroughs(clickData, current_selections):
         'crime_rank': crime_rank,
         'investment_rank': investment_rank
     }
-    
+
     if current_selections is None:
         current_selections = []
-    
+
     if any(b['name'] == clicked_borough for b in current_selections):
         current_selections = [b for b in current_selections if b['name'] != clicked_borough]
     else:
         current_selections.append(borough_data)
-    
+
     if current_selections:
         selected_ranks = {b['name']: b['investment_rank'] for b in current_selections}
         best_investment = min(selected_ranks.items(), key=lambda x: x[1])[0]
-        
+
         top_borough = next(b for b in current_selections if b['name'] == best_investment)
         details_content = html.Div([
-            html.H3("Best Investment Borough", 
+            html.H3("Best Investment Borough",
                    style={"textAlign": "center", "color": "darkred","fontSize":"23px","marginTop": "5px"}),
             html.Div([
                 html.Div([
                     html.Div([
-                        html.H4(f"{top_borough['name']}", 
+                        html.H4(f"{top_borough['name']}",
                             style={"color": "#333", "marginTop": "10px","fontSize":"20px"}),
                         html.P([
                             "Total Listings: ",
@@ -449,7 +449,7 @@ def update_selected_boroughs(clickData, current_selections):
                         ], style={"marginBottom": "12px", "fontSize": "16px"})
                     ])
                 ], style={"width": "30%"}),
-            
+
                 html.Div([
                     html.Img(
                         src=borough_images[top_borough['name']],
@@ -473,7 +473,7 @@ def update_selected_boroughs(clickData, current_selections):
             "borderRadius": "10px",
             "padding": "20px"
         })
-    
+
     return (
         current_selections,
         generate_borough_cards(current_selections),
@@ -495,33 +495,33 @@ def update_selected_boroughs(clickData, current_selections):
 def remove_borough_card(n_clicks, current_selections):
    if not any(n_clicks):
        raise dash.exceptions.PreventUpdate
-   
+
    ctx = dash.callback_context
    if not ctx.triggered:
        raise dash.exceptions.PreventUpdate
-   
+
    button_id = json.loads(ctx.triggered[0]['prop_id'].split('.')[0])
    borough_to_remove = button_id['index']
-   
+
    updated_selections = [b for b in current_selections if b['name'] != borough_to_remove]
    selected_borough_names = [b['name'] for b in updated_selections]
-   
+
    best_investment = "Manhattan"
-   details_content = html.Div("Select a borough to see details", 
+   details_content = html.Div("Select a borough to see details",
                             style={"textAlign": "center", "color": "gray"})
-   
+
    if updated_selections:
        selected_ranks = {b['name']: b['investment_rank'] for b in updated_selections}
        best_investment = min(selected_ranks.items(), key=lambda x: x[1])[0]
-       
+
        top_borough = next(b for b in updated_selections if b['name'] == best_investment)
        details_content = html.Div([
-           html.H3("Best Investment Borough", 
+           html.H3("Best Investment Borough",
                   style={"textAlign": "center", "color": "darkred","fontSize":"23px","marginTop": "5px"}),
            html.Div([
                html.Div([
                    html.Div([
-                       html.H4(f"{top_borough['name']}", 
+                       html.H4(f"{top_borough['name']}",
                            style={"color": "#333", "marginTop": "10px","fontSize":"20px"}),
                        html.P([
                            "Total Listings: ",
@@ -541,7 +541,7 @@ def remove_borough_card(n_clicks, current_selections):
                        ], style={"marginBottom": "12px", "fontSize": "16px"})
                    ])
                ], style={"width": "30%"}),
-           
+
                html.Div([
                    html.Img(
                        src=borough_images[top_borough['name']],
@@ -563,7 +563,7 @@ def remove_borough_card(n_clicks, current_selections):
            "borderRadius": "10px",
            "padding": "20px"
        })
-   
+
    return (
        updated_selections,
        generate_borough_cards(updated_selections),
@@ -575,4 +575,3 @@ def remove_borough_card(n_clicks, current_selections):
 
 if __name__ == '__main__':
     app.run(debug=False)
-        

@@ -10,32 +10,34 @@ def create_room_figure(selected_boroughs=None, y_range=None):
     """創建房型分析箱型圖"""
     try:
         # 獲取資料庫路徑
-        if os.environ.get('ENV') == 'production':
-            db_path = os.environ.get('DATABASE_URL')  # Heroku 環境使用 DATABASE_URL
-        else:
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            db_path = os.path.join(current_dir, 'db_final.db')  # 本地開發環境使用 SQLite
+        # if os.environ.get('ENV') == 'production':
+        #     db_path = os.environ.get('DATABASE_URL')  # Heroku 環境使用 DATABASE_URL
+        # else:
+        #     current_dir = os.path.dirname(os.path.abspath(__file__))
+        #     db_path = os.path.join(current_dir, 'db_final.db')  # 本地開發環境使用 SQLite
+
+        db_path = 'db_final.sqlite3'
 
         # 建立資料庫連線
         with sqlite3.connect(db_path) as conn:
             # 基本查詢
             query = """
-            SELECT 
+            SELECT
                 b.borough_name AS borough,
                 l.listing_id,
                 h.host_name,
                 l.room_type,
                 l.price
-            FROM 
+            FROM
                 listings l
-            JOIN 
+            JOIN
                 locations loc ON l.listing_id = loc.listing_id
-            JOIN 
+            JOIN
                 borough b ON loc.borough_id = b.borough_id
             JOIN
                 hosts h ON l.host_id = h.host_id
-            WHERE 
-                l.price > 0 
+            WHERE
+                l.price > 0
                 AND l.price < 2000
             """
 

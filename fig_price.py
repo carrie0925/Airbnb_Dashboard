@@ -10,27 +10,29 @@ def create_price_figure(selected_boroughs=None):
     """創建房價和房源數量分析圖表"""
     try:
         # 根據環境選擇資料庫路徑
-        if os.environ.get('ENV') == 'production':
-            db_path = os.environ.get('DATABASE_URL')  # Heroku 環境使用 DATABASE_URL
-        else:
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            db_path = os.path.join(current_dir, 'db_final.db')  # 本地開發環境使用 SQLite
-        
+        # if os.environ.get('ENV') == 'production':
+        #     db_path = os.environ.get('DATABASE_URL')  # Heroku 環境使用 DATABASE_URL
+        # else:
+        #     current_dir = os.path.dirname(os.path.abspath(__file__))
+        #     db_path = os.path.join(current_dir, 'db_final.db')  # 本地開發環境使用 SQLite
+
+        db_path = 'db_final.sqlite3'
+
         # 建立資料庫連線
         with sqlite3.connect(db_path) as conn:
             # 基本查詢
             query = """
-            SELECT 
+            SELECT
                 b.borough_name AS borough,
                 round(AVG(l.price), 2) AS AveragePrice,
                 COUNT(l.listing_id) AS NumberOfProperties
-            FROM 
+            FROM
                 listings l
-            JOIN 
+            JOIN
                 locations loc ON l.listing_id = loc.listing_id
-            JOIN 
+            JOIN
                 borough b ON loc.borough_id = b.borough_id
-            WHERE 
+            WHERE
                 l.price IS NOT NULL
                 AND l.price > 0
             """
@@ -41,9 +43,9 @@ def create_price_figure(selected_boroughs=None):
                 query += f" AND b.borough_name IN ('{borough_list}')"
             else:
                 query += " AND b.borough_name IN ('Bronx', 'Brooklyn', 'Manhattan', 'Queens', 'Staten Island')"
-            
+
             query += " GROUP BY b.borough_name;"
-            
+
             # 執行查詢並讀取資料
             df = pd.read_sql_query(query, conn)
 
@@ -129,6 +131,7 @@ def create_price_figure(selected_boroughs=None):
             }]
         )
         return fig
+
 
 
 # 測試用主程式

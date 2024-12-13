@@ -10,30 +10,30 @@ import psycopg2
 def create_potential_figure():
     """創建觀光收入和安全評分比較圖表"""
     try:
-        # 根據環境選擇資料庫
-        if os.environ.get('ENV') == 'production':
-            # Heroku 環境使用 PostgreSQL
-            DATABASE_URL = os.environ.get('DATABASE_URL')
-            conn = psycopg2.connect(DATABASE_URL, sslmode='require')
-        else:
-            # 本地開發環境使用 SQLite
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            db_path = os.path.join(current_dir, 'db_final.db')
-            conn = sqlite3.connect(db_path)
+        # # 根據環境選擇資料庫
+        # if os.environ.get('ENV') == 'production':
+        #     # Heroku 環境使用 PostgreSQL
+        #     DATABASE_URL = os.environ.get('DATABASE_URL')
+        #     conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+        # else:
+        #     # 本地開發環境使用 SQLite
+        #     current_dir = os.path.dirname(os.path.abspath(__file__))
+        db_path = 'db_final.sqlite3' # os.path.join(current_dir, 'db_final.db')
+        conn = sqlite3.connect(db_path)
 
         # SQL 查詢
         query = """
-        SELECT 
+        SELECT
             b.borough_name,
             b.tourist_revenue,
             SUM(s.crime_level_weight) as crime_score
-        FROM 
+        FROM
             borough b
-        LEFT JOIN 
+        LEFT JOIN
             security s ON b.borough_id = s.borough_id
-        GROUP BY 
+        GROUP BY
             b.borough_id, b.borough_name, b.tourist_revenue
-        ORDER BY 
+        ORDER BY
             b.borough_name;
         """
         # 執行查詢並讀取資料
