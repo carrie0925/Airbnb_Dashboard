@@ -4,26 +4,24 @@ import pandas as pd
 import plotly.graph_objects as go
 import sqlite3
 import os
+import psycopg2
+
 
 def create_potential_figure():
     """創建觀光收入和安全評分比較圖表"""
     try:
-        # 使用相對路徑找到資料庫
-        def get_db_path():
-            """獲取數據庫路徑"""
-            if os.environ.get('ENV') == 'production':
-                # Heroku 環境
-                return os.path.join(os.getcwd(), 'db_final.db')
-            else:
-                # 本地開發環境
-                current_dir = os.path.dirname(os.path.abspath(__file__))
-                return os.path.join(current_dir, 'db_final.db')
-                db_path = os.path.join(current_dir, "db_final.db")
-            
-        db_path = get_db_path()
-        conn = sqlite3.connect(db_path)
-        
-        # SQL查詢，結合 borough 和 security 表格
+        # 根據環境選擇資料庫
+        if os.environ.get('ENV') == 'production':
+            # Heroku 環境使用 PostgreSQL
+            DATABASE_URL = os.environ.get('DATABASE_URL')
+            conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+        else:
+            # 本地開發環境使用 SQLite
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            db_path = os.path.join(current_dir, 'db_final.db')
+            conn = sqlite3.connect(db_path)
+
+        # SQL 查詢
         query = """
         SELECT 
             b.borough_name,
@@ -38,19 +36,21 @@ def create_potential_figure():
         ORDER BY 
             b.borough_name;
         """
-        
-        # 讀取資料
+        # 執行查詢並讀取資料
         df = pd.read_sql_query(query, conn)
-        conn.close()
-        
-    except sqlite3.Error as e:
+
+    except Exception as e:
         print(f"資料庫錯誤: {e}")
-        # 如果讀取失敗，使用備用資料
+        # 如果查詢失敗，使用備用資料
         df = pd.DataFrame({
             'borough_name': ['Manhattan', 'Brooklyn', 'Queens', 'Bronx', 'Staten Island'],
             'tourist_revenue': [32831, 2973, 9938, 955, 456],
             'crime_score': [4, 1, 3, 2, 5]
         })
+
+    finally:
+        if 'conn' in locals() and conn:
+            conn.close()
 
     # 計算平均值
     avg_crime_score = df["crime_score"].mean()
@@ -148,10 +148,11 @@ def create_potential_figure():
 
     return fig
 
+
 # 測試用主程式
 if __name__ == "__main__":
     app = dash.Dash(__name__)
-    
+
     app.layout = html.Div([
         html.H2("NYC Tourism Revenue vs. Crime Score",
                 style={'text-align': 'left'}),
@@ -160,5 +161,5 @@ if __name__ == "__main__":
             config={"displayModeBar": False}
         )
     ])
-    
+
     app.run_server(debug=True)

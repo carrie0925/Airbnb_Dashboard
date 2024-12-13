@@ -5,52 +5,47 @@ import plotly.graph_objects as go
 import sqlite3
 import os
 
+
 def create_price_figure(selected_boroughs=None):
     """創建房價和房源數量分析圖表"""
     try:
-        # 使用相對路徑找到資料庫
-        def get_db_path():
-            """獲取數據庫路徑"""
-            if os.environ.get('ENV') == 'production':
-                # Heroku 環境
-                return os.path.join(os.getcwd(), 'db_final.db')
-            else:
-                # 本地開發環境
-                current_dir = os.path.dirname(os.path.abspath(__file__))
-                return os.path.join(current_dir, 'db_final.db')
-                db_path = os.path.join(current_dir, "db_final.db")
-            
-        db_path = get_db_path()
-        conn = sqlite3.connect(db_path)
-        
-        # Base query
-        query = """
-        SELECT 
-            b.borough_name AS borough,
-            round(AVG(l.price), 2) AS AveragePrice,
-            COUNT(l.listing_id) AS NumberOfProperties
-        FROM 
-            listings l
-        JOIN 
-            locations loc ON l.listing_id = loc.listing_id
-        JOIN 
-            borough b ON loc.borough_id = b.borough_id
-        WHERE 
-            l.price IS NOT NULL
-            AND l.price > 0
-        """
-        
-        # Add borough filtering if selections exist
-        if selected_boroughs and len(selected_boroughs) > 0:
-            borough_list = "', '".join(selected_boroughs)
-            query += f" AND b.borough_name IN ('{borough_list}')"
+        # 根據環境選擇資料庫路徑
+        if os.environ.get('ENV') == 'production':
+            db_path = os.environ.get('DATABASE_URL')  # Heroku 環境使用 DATABASE_URL
         else:
-            query += " AND b.borough_name IN ('Bronx', 'Brooklyn', 'Manhattan', 'Queens', 'Staten Island')"
-            
-        query += " GROUP BY b.borough_name;"
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            db_path = os.path.join(current_dir, 'db_final.db')  # 本地開發環境使用 SQLite
         
-        df = pd.read_sql_query(query, conn)
-        conn.close()
+        # 建立資料庫連線
+        with sqlite3.connect(db_path) as conn:
+            # 基本查詢
+            query = """
+            SELECT 
+                b.borough_name AS borough,
+                round(AVG(l.price), 2) AS AveragePrice,
+                COUNT(l.listing_id) AS NumberOfProperties
+            FROM 
+                listings l
+            JOIN 
+                locations loc ON l.listing_id = loc.listing_id
+            JOIN 
+                borough b ON loc.borough_id = b.borough_id
+            WHERE 
+                l.price IS NOT NULL
+                AND l.price > 0
+            """
+
+            # 添加篩選條件（如果有選擇）
+            if selected_boroughs:
+                borough_list = "', '".join(selected_boroughs)
+                query += f" AND b.borough_name IN ('{borough_list}')"
+            else:
+                query += " AND b.borough_name IN ('Bronx', 'Brooklyn', 'Manhattan', 'Queens', 'Staten Island')"
+            
+            query += " GROUP BY b.borough_name;"
+            
+            # 執行查詢並讀取資料
+            df = pd.read_sql_query(query, conn)
 
         # 自定義行政區域顏色
         borough_colors = {
@@ -85,14 +80,7 @@ def create_price_figure(selected_boroughs=None):
             name='Average Price ($)',
             yaxis='y2',
             showlegend=False,
-            hovertemplate="Borough: %{x}<br>Avg Price: $%{y:,.2f}<extra></extra>",
-            hoverlabel=dict(
-                bgcolor="gray",  
-                font=dict(
-                    color="white",  
-                    size=12         
-                ) 
-            )
+            hovertemplate="Borough: %{x}<br>Avg Price: $%{y:,.2f}<extra></extra>"
         ))
 
         # 更新圖表格式
@@ -126,7 +114,7 @@ def create_price_figure(selected_boroughs=None):
         )
 
         return fig
-    
+
     except Exception as e:
         print(f"Error creating price figure: {e}")
         fig = go.Figure()
@@ -141,6 +129,7 @@ def create_price_figure(selected_boroughs=None):
             }]
         )
         return fig
+
 
 # 測試用主程式
 if __name__ == "__main__":

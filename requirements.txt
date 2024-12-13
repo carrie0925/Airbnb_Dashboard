@@ -6,3 +6,4 @@ dash-bootstrap-components
 Pillow==9.3.0
 python-dotenv
 gunicorn
+psycopg2-binary

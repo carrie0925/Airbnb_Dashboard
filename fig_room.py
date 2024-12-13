@@ -9,51 +9,44 @@ import os
 def create_room_figure(selected_boroughs=None, y_range=None):
     """創建房型分析箱型圖"""
     try:
-        # 使用相對路徑找到資料庫
-        def get_db_path():
-            """獲取數據庫路徑"""
-            if os.environ.get('ENV') == 'production':
-                # Heroku 環境
-                return os.path.join(os.getcwd(), 'db_final.db')
-            else:
-                # 本地開發環境
-                current_dir = os.path.dirname(os.path.abspath(__file__))
-                return os.path.join(current_dir, 'db_final.db')
-                db_path = os.path.join(current_dir, "db_final.db")
-            
-        db_path = get_db_path()
-        conn = sqlite3.connect(db_path)
-        
-        # Base query
-        query = """
-        SELECT 
-            b.borough_name AS borough,
-            l.listing_id,
-            h.host_name,
-            l.room_type,
-            l.price
-        FROM 
-            listings l
-        JOIN 
-            locations loc ON l.listing_id = loc.listing_id
-        JOIN 
-            borough b ON loc.borough_id = b.borough_id
-        JOIN
-            hosts h ON l.host_id = h.host_id
-        WHERE 
-            l.price > 0 
-            AND l.price < 2000
-        """
-        
-        # Add borough filtering if selections exist
-        if selected_boroughs and len(selected_boroughs) > 0:
-            borough_list = "', '".join(selected_boroughs)
-            query += f" AND b.borough_name IN ('{borough_list}')"
-            
-        df = pd.read_sql_query(query, conn)
-        conn.close()
+        # 獲取資料庫路徑
+        if os.environ.get('ENV') == 'production':
+            db_path = os.environ.get('DATABASE_URL')  # Heroku 環境使用 DATABASE_URL
+        else:
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            db_path = os.path.join(current_dir, 'db_final.db')  # 本地開發環境使用 SQLite
 
-        # 過濾和重命名房源類型
+        # 建立資料庫連線
+        with sqlite3.connect(db_path) as conn:
+            # 基本查詢
+            query = """
+            SELECT 
+                b.borough_name AS borough,
+                l.listing_id,
+                h.host_name,
+                l.room_type,
+                l.price
+            FROM 
+                listings l
+            JOIN 
+                locations loc ON l.listing_id = loc.listing_id
+            JOIN 
+                borough b ON loc.borough_id = b.borough_id
+            JOIN
+                hosts h ON l.host_id = h.host_id
+            WHERE 
+                l.price > 0 
+                AND l.price < 2000
+            """
+
+            # 添加行政區篩選條件（如果有選擇）
+            if selected_boroughs:
+                borough_list = "', '".join(selected_boroughs)
+                query += f" AND b.borough_name IN ('{borough_list}')"
+
+            df = pd.read_sql_query(query, conn)
+
+        # 過濾和重命名房型類型
         room_type_mapping = {
             "Private room": "Private Room",
             "Entire home/apt": "Entire Home/Apt",
@@ -63,74 +56,44 @@ def create_room_figure(selected_boroughs=None, y_range=None):
         df = df[df["room_type"].isin(room_type_mapping.keys())]
         df["room_type"] = df["room_type"].map(room_type_mapping)
 
-        # 自定義色票
-        borough_colors = {
-            "Manhattan": "#ff928b",
-            "Brooklyn": "#efe9ae",
-            "Queens": "#cdeac0",
-            "Bronx": "#ffac81",
-            "Staten Island": "#fec3a6"
+        # 自定義色票（還原您的原始配色）
+        custom_colors = {
+            "Private Room": "#9c9c7c",
+            "Entire Home/Apt": "#9c9c7c",
+            "Hotel Room": "#9c9c7c",
+            "Shared Room": "#9c9c7c"
         }
 
-        # 創建圖表
-        if selected_boroughs and len(selected_boroughs) > 0:
-            fig = px.box(
-                df,
-                x="room_type",
-                y="price",
-                color="borough",
-                title="Price Distribution by Room Type and Borough",
-                labels={
-                    "room_type": "Room Type",
-                    "price": "Price per Night ($)",
-                    "borough": "Borough"
-                },
-                color_discrete_map=borough_colors,
-                hover_data=["listing_id", "host_name"]
-            )
-        else:
-            fig = px.box(
-                df,
-                x="room_type",
-                y="price",
-                title="Price Distribution by Room Type",
-                labels={
-                    "room_type": "Room Type",
-                    "price": "Price per Night ($)"
-                },
-                color_discrete_sequence=["#9c9c7c"],
-                hover_data=["listing_id", "host_name"]
-            )
+        # 創建箱型圖
+        fig = px.box(
+            df,
+            x="room_type",
+            y="price",
+            title="Price Distribution by Room Type",
+            labels={
+                "room_type": "Room Type",
+                "price": "Price per Night ($)"
+            },
+            color="room_type",
+            color_discrete_map=custom_colors,
+            hover_data=["listing_id", "host_name"]
+        )
 
         # 設定 y 軸範圍
-        y_axis_range = y_range if y_range is not None else [0, min(2000, df['price'].quantile(0.95))]
+        y_axis_range = y_range if y_range else [0, min(2000, df['price'].quantile(0.95))]
 
         # 更新圖表佈局
         fig.update_layout(
-            showlegend=True,
-            legend=dict(
-                orientation="h",
-                yanchor="bottom",
-                y=-0.3,
-                xanchor="center",
-                x=0.5
-            ),
+            showlegend=False,
             yaxis=dict(
                 range=y_axis_range,
-                title=dict(
-                    text="Price per Night ($)",
-                    font=dict(size=14)
-                ),
+                title=dict(text="Price per Night ($)", font=dict(size=14)),
                 gridcolor="rgba(150, 150, 150, 0.35)",
-                tickfont=dict(size=12),
                 tickprefix="$",
-                tickformat=",."
+                tickfont=dict(size=12)
             ),
             xaxis=dict(
-                title=dict(
-                    text="Room Type",
-                    font=dict(size=14)
-                ),
+                title=dict(text="Room Type", font=dict(size=14)),
                 tickfont=dict(size=12),
                 categoryorder="total ascending"
             ),
@@ -143,12 +106,11 @@ def create_room_figure(selected_boroughs=None, y_range=None):
             paper_bgcolor="white",
             height=450,
             margin=dict(t=50, b=80, l=50, r=50),
-            hovermode='closest'
+            hovermode="closest"
         )
 
-        # 更新 hover 模板
+        # 更新箱型圖的 hover 效果
         fig.update_traces(
-            marker=dict(line=dict(width=1.5)),
             boxmean=True,  # 顯示平均值
             hovertemplate=(
                 "<b>%{x}</b><br>" +
@@ -160,7 +122,7 @@ def create_room_figure(selected_boroughs=None, y_range=None):
         )
 
         return fig
-    
+
     except Exception as e:
         print(f"Error creating room figure: {e}")
         return px.box(
@@ -177,7 +139,7 @@ def create_room_figure(selected_boroughs=None, y_range=None):
 # 測試用主程式
 if __name__ == "__main__":
     app = dash.Dash(__name__)
-    
+
     app.layout = html.Div([
         html.H2("Room Type Analysis", 
                 style={'text-align': 'center', 'margin-bottom': '20px'}),

@@ -4,67 +4,63 @@ import pandas as pd
 import plotly.graph_objects as go
 import sqlite3
 import os
+import psycopg2
+
+def get_db_connection():
+    """根據環境返回正確的資料庫連線"""
+    if os.environ.get('ENV') == 'production':
+        # 使用 PostgreSQL 連線
+        DATABASE_URL = os.environ.get('DATABASE_URL')
+        conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+    else:
+        # 使用 SQLite 在本地開發環境
+        db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'db_final.db')
+        conn = sqlite3.connect(db_path)
+    return conn
 
 def create_crime_figure():
     """創建犯罪分布堆疊百分比柱狀圖"""
-    try:
-        # 使用相對路徑找到資料庫
-        def get_db_path():
-            """獲取數據庫路徑"""
-            if os.environ.get('ENV') == 'production':
-                # Heroku 環境
-                return os.path.join(os.getcwd(), 'db_final.db')
-            else:
-                # 本地開發環境
-                current_dir = os.path.dirname(os.path.abspath(__file__))
-                return os.path.join(current_dir, 'db_final.db')
-                db_path = os.path.join(current_dir, "db_final.db")
-            
-        db_path = get_db_path()
-        conn = sqlite3.connect(db_path)
-        
-        query = """
-        WITH CrimeCounts AS (
-            SELECT 
-                b.borough_name AS borough,
-                s.crime_level AS crime_type,
-                COUNT(s.Event_id) AS crime_count
-            FROM 
-                borough b
-            LEFT JOIN 
-                security s ON b.borough_id = s.borough_id
-            GROUP BY 
-                b.borough_id, b.borough_name, s.crime_level
-        ),
-        BoroughTotals AS (
-            SELECT 
-                borough,
-                SUM(crime_count) as total_crimes
-            FROM 
-                CrimeCounts
-            GROUP BY 
-                borough
-        )
+    query = """
+    WITH CrimeCounts AS (
         SELECT 
-            c.borough,
-            c.crime_type,
-            c.crime_count,
-            CAST(c.crime_count AS FLOAT) / b.total_crimes * 100 as crime_percentage
+            b.borough_name AS borough,
+            s.crime_level AS crime_type,
+            COUNT(s.Event_id) AS crime_count
         FROM 
-            CrimeCounts c
-        JOIN 
-            BoroughTotals b ON c.borough = b.borough
-        ORDER BY c.borough;
-        """
-        
-        df = pd.read_sql_query(query, conn)
-        conn.close()
+            borough b
+        LEFT JOIN 
+            security s ON b.borough_id = s.borough_id
+        GROUP BY 
+            b.borough_id, b.borough_name, s.crime_level
+    ),
+    BoroughTotals AS (
+        SELECT 
+            borough,
+            SUM(crime_count) as total_crimes
+        FROM 
+            CrimeCounts
+        GROUP BY 
+            borough
+    )
+    SELECT 
+        c.borough,
+        c.crime_type,
+        c.crime_count,
+        CAST(c.crime_count AS FLOAT) / b.total_crimes * 100 as crime_percentage
+    FROM 
+        CrimeCounts c
+    JOIN 
+        BoroughTotals b ON c.borough = b.borough
+    ORDER BY c.borough;
+    """
+    try:
+        conn = get_db_connection()
 
-        # 確保資料框內有資料
+        df = pd.read_sql_query(query, conn)
         if df.empty:
             raise ValueError("Database query returned no results")
 
-        # 轉換資料以適應堆疊長條圖
+        df = df.dropna(subset=["borough", "crime_type"])
         pivot_df = df.pivot(index="borough", columns="crime_type", values="crime_count").fillna(0)
         pivot_pct = df.pivot(index="borough", columns="crime_type", values="crime_percentage").fillna(0)
 
@@ -157,6 +153,8 @@ def create_crime_figure():
                 "font": {"size": 14}
             }]
         )
+    finally:
+        conn.close()  
 
 # 測試用主程式
 if __name__ == "__main__":
