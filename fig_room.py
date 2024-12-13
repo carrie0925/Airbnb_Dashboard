@@ -4,19 +4,14 @@ from dash.dependencies import Input, Output
 import pandas as pd
 import plotly.express as px
 import sqlite3
-from dotenv import load_dotenv
 import os
 
 def create_room_figure(selected_boroughs=None, y_range=None):
     """創建房型分析箱型圖"""
     try:
-        # 載入環境變數
-        load_dotenv()
-        
-        # 資料庫連接與查詢
-        db_path = os.getenv("DB_PATH")
-        if not db_path:
-            raise ValueError("DB_PATH environment variable not found")
+        # 使用相對路徑找到資料庫
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        db_path = os.path.join(current_dir, "db_final.db")
             
         conn = sqlite3.connect(db_path)
         
@@ -24,10 +19,10 @@ def create_room_figure(selected_boroughs=None, y_range=None):
         query = """
         SELECT 
             b.borough_name AS borough,
-            l.listing_id AS listing_id,
-            h.host_name AS host_name,
-            l.room_type AS room_type,
-            l.price AS price
+            l.listing_id,
+            h.host_name,
+            l.room_type,
+            l.price
         FROM 
             listings l
         JOIN 
@@ -36,7 +31,9 @@ def create_room_figure(selected_boroughs=None, y_range=None):
             borough b ON loc.borough_id = b.borough_id
         JOIN
             hosts h ON l.host_id = h.host_id
-        WHERE 1=1
+        WHERE 
+            l.price > 0 
+            AND l.price < 2000
         """
         
         # Add borough filtering if selections exist
@@ -47,12 +44,18 @@ def create_room_figure(selected_boroughs=None, y_range=None):
         df = pd.read_sql_query(query, conn)
         conn.close()
 
-        # 過濾房源類型
-        room_types = ["Private room", "Entire home/apt", "Hotel room", "Shared room"]
-        df = df[df["room_type"].isin(room_types)]
+        # 過濾和重命名房源類型
+        room_type_mapping = {
+            "Private room": "Private Room",
+            "Entire home/apt": "Entire Home/Apt",
+            "Hotel room": "Hotel Room",
+            "Shared room": "Shared Room"
+        }
+        df = df[df["room_type"].isin(room_type_mapping.keys())]
+        df["room_type"] = df["room_type"].map(room_type_mapping)
 
         # 自定義色票
-        custom_colors = {
+        borough_colors = {
             "Manhattan": "#ff928b",
             "Brooklyn": "#efe9ae",
             "Queens": "#cdeac0",
@@ -68,8 +71,12 @@ def create_room_figure(selected_boroughs=None, y_range=None):
                 y="price",
                 color="borough",
                 title="Price Distribution by Room Type and Borough",
-                labels={"room_type": "Room Type", "price": "Price per Night ($)"},
-                color_discrete_map=custom_colors,
+                labels={
+                    "room_type": "Room Type",
+                    "price": "Price per Night ($)",
+                    "borough": "Borough"
+                },
+                color_discrete_map=borough_colors,
                 hover_data=["listing_id", "host_name"]
             )
         else:
@@ -78,44 +85,68 @@ def create_room_figure(selected_boroughs=None, y_range=None):
                 x="room_type",
                 y="price",
                 title="Price Distribution by Room Type",
-                labels={"room_type": "Room Type", "price": "Price per Night ($)"},
+                labels={
+                    "room_type": "Room Type",
+                    "price": "Price per Night ($)"
+                },
                 color_discrete_sequence=["#9c9c7c"],
                 hover_data=["listing_id", "host_name"]
             )
 
-        # 設定 y 軸範圍（使用傳入的範圍或默認值）
-        y_axis_range = y_range if y_range is not None else [0, 1000]
+        # 設定 y 軸範圍
+        y_axis_range = y_range if y_range is not None else [0, min(2000, df['price'].quantile(0.95))]
 
-        # 圖表美化
+        # 更新圖表佈局
         fig.update_layout(
-            showlegend=False,
+            showlegend=True,
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=-0.3,
+                xanchor="center",
+                x=0.5
+            ),
             yaxis=dict(
-                range=y_axis_range,  # 使用設定的範圍
-                title=dict(text="Price per Night ($)", font=dict(size=14)),
+                range=y_axis_range,
+                title=dict(
+                    text="Price per Night ($)",
+                    font=dict(size=14)
+                ),
                 gridcolor="rgba(150, 150, 150, 0.35)",
-                tickfont=dict(size=12)
+                tickfont=dict(size=12),
+                tickprefix="$",
+                tickformat=",."
             ),
             xaxis=dict(
-                title=dict(text=""),
-                tickfont=dict(size=12)
+                title=dict(
+                    text="Room Type",
+                    font=dict(size=14)
+                ),
+                tickfont=dict(size=12),
+                categoryorder="total ascending"
             ),
             title=dict(
+                text="Room Type Price Distribution",
                 font=dict(size=18),
                 x=0.5
             ),
-            plot_bgcolor="#ffffff",
-            paper_bgcolor="#ffffff",
+            plot_bgcolor="white",
+            paper_bgcolor="white",
             height=450,
-            margin=dict(t=50, b=50, l=50, r=50)
+            margin=dict(t=50, b=80, l=50, r=50),
+            hovermode='closest'
         )
 
+        # 更新 hover 模板
         fig.update_traces(
             marker=dict(line=dict(width=1.5)),
-            boxmean=False,
+            boxmean=True,  # 顯示平均值
             hovertemplate=(
-                "Host Name: %{customdata[1]}<br>" +
-                "Listing ID: %{customdata[0]}<br>" +
-                "Price per Night: $%{y:,.2f}<extra></extra>"
+                "<b>%{x}</b><br>" +
+                "Price: $%{y:,.2f}<br>" +
+                "Host: %{customdata[1]}<br>" +
+                "Listing ID: %{customdata[0]}" +
+                "<extra></extra>"
             )
         )
 
@@ -123,20 +154,18 @@ def create_room_figure(selected_boroughs=None, y_range=None):
     
     except Exception as e:
         print(f"Error creating room figure: {e}")
-        fig = px.box(
+        return px.box(
             pd.DataFrame({'x': [], 'y': []}),
-            title="Error Loading Room Data"
-        )
-        fig.add_annotation(
-            text="Error loading room data. Please check database connection.",
+            title="Error Loading Data"
+        ).add_annotation(
+            text="Error loading data. Please check database connection.",
             xref="paper",
             yref="paper",
             showarrow=False,
             font=dict(size=14)
         )
-        return fig
 
-# 獨立運行時的測試版面配置
+# 測試用主程式
 if __name__ == "__main__":
     app = dash.Dash(__name__)
     
@@ -147,74 +176,70 @@ if __name__ == "__main__":
         # 行政區選擇
         html.Div([
             html.Label("Select Boroughs:", style={
-                'font-size': '16px',
-                'font-weight': 'bold',
-                'margin-bottom': '10px',
-                'color': 'gray'
+                'fontSize': '16px',
+                'fontWeight': 'bold',
+                'marginBottom': '10px',
+                'color': '#333'
             }),
             dcc.Checklist(
                 id="borough-checklist",
                 options=[
-                    {"label": "Manhattan", "value": "Manhattan"},
-                    {"label": "Brooklyn", "value": "Brooklyn"},
-                    {"label": "Queens", "value": "Queens"},
-                    {"label": "Bronx", "value": "Bronx"},
-                    {"label": "Staten Island", "value": "Staten Island"}
+                    {"label": " Manhattan", "value": "Manhattan"},
+                    {"label": " Brooklyn", "value": "Brooklyn"},
+                    {"label": " Queens", "value": "Queens"},
+                    {"label": " Bronx", "value": "Bronx"},
+                    {"label": " Staten Island", "value": "Staten Island"}
                 ],
                 value=[],
                 inline=True,
-                style={'font-size': '14px', 'margin': '10px'}
+                style={'fontSize': '14px', 'margin': '10px'}
             )
         ], style={
             'padding': '20px',
-            'background-color': 'white',
-            'border-radius': '10px',
-            'margin-bottom': '20px',
+            'backgroundColor': 'white',
+            'borderRadius': '10px',
+            'marginBottom': '20px',
             'boxShadow': '0 2px 10px rgba(0,0,0,0.1)'
         }),
 
         # 價格範圍選擇
         html.Div([
             html.Label("Select Price Range:", style={
-                'font-size': '16px',
-                'font-weight': 'bold',
-                'margin-bottom': '10px',
-                'color': 'gray'
+                'fontSize': '16px',
+                'fontWeight': 'bold',
+                'marginBottom': '10px',
+                'color': '#333'
             }),
             dcc.RangeSlider(
                 id='price-range-slider',
-                min=600,
+                min=0,
                 max=2000,
-                step=None,
+                step=100,
                 marks={
-                    600: '$600',
-                    800: '$800',
-                    1200: '$1,200',
-                    1600: '$1,600',
+                    0: '$0',
+                    500: '$500',
+                    1000: '$1,000',
+                    1500: '$1,500',
                     2000: '$2,000'
                 },
-                value=[600, 2000]
+                value=[0, 2000]
             )
         ], style={
             'padding': '20px',
-            'background-color': 'white',
-            'border-radius': '10px',
-            'margin-bottom': '20px',
+            'backgroundColor': 'white',
+            'borderRadius': '10px',
+            'marginBottom': '20px',
             'boxShadow': '0 2px 10px rgba(0,0,0,0.1)'
         }),
         
         dcc.Graph(
             id="boxplot-graph",
             figure=create_room_figure(),
-            style={
-                'border-radius': '10px',
-                'box-shadow': '0 4px 8px rgba(0, 0, 0, 0.1)',
-                'background-color': 'white'
-            }
+            config={"displayModeBar": False}
         )
     ], style={
         'padding': '20px',
-        'background-color': '#f5f5f5'
+        'backgroundColor': '#f5f5f5'
     })
     
     @app.callback(

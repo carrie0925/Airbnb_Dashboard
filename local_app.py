@@ -7,42 +7,30 @@ from fig_crime import create_crime_figure
 from fig_potential import create_potential_figure
 from fig_room import create_room_figure
 from PIL import Image
-# from dotenv import load_dotenv
+from dotenv import load_dotenv
 import os
 import json
 
-app = dash.Dash(__name__,assets_folder='assets')
+app = dash.Dash(__name__)
 server = app.server
 
 # 環境變數設置
-# dotenv_path = os.getenv("DOTENV_PATH")
-# load_dotenv(dotenv_path=dotenv_path)
+dotenv_path = os.getenv("DOTENV_PATH")
+load_dotenv(dotenv_path=dotenv_path)
 
-# logo_path = "image/airbnb_logo.png"
-# nyc_path = "image/Flag_of_New_York_City.png"
-# borough_image_path = "image"
-
-
-# logo_path = Image.open(logo_path)
-# nyc_path = Image.open(nyc_path)
-# borough_images = {
-#     "Manhattan": Image.open(os.path.join(borough_image_path, "Manhaton.jpg")),
-#     "Brooklyn": Image.open(os.path.join(borough_image_path, "Brooklyn.jpg")),
-#     "Queens": Image.open(os.path.join(borough_image_path, "Queens.jpg")),
-#     "Bronx": Image.open(os.path.join(borough_image_path, "Bronx.jpg")),
-#     "Staten Island": Image.open(os.path.join(borough_image_path, "Staten_Island.jpg"))
-# }
+logo_path = os.getenv("LOGO_PATH")
+nyc_path = os.getenv("NYC_PATH")
+borough_image_path = os.getenv("BOROUGH_IMAGES_PATH")
 
 
-logo_path = app.get_asset_url('images/airbnb_logo.png')
-nyc_path = app.get_asset_url('images/Flag_of_New_York_City.png')
-
+logo_path = Image.open(logo_path)
+nyc_path = Image.open(nyc_path)
 borough_images = {
-    "Manhattan": app.get_asset_url('images/boroughs/Manhaton.jpg'),
-    "Brooklyn": app.get_asset_url('images/boroughs/Brooklyn.jpg'),
-    "Queens": app.get_asset_url('images/boroughs/Queens.jpg'),
-    "Bronx": app.get_asset_url('images/boroughs/Bronx.jpg'),
-    "Staten Island": app.get_asset_url('images/boroughs/Staten_Island.jpg')
+    "Manhattan": Image.open(os.path.join(borough_image_path, "Manhaton.jpg")),
+    "Brooklyn": Image.open(os.path.join(borough_image_path, "Brooklyn.jpg")),
+    "Queens": Image.open(os.path.join(borough_image_path, "Queens.jpg")),
+    "Bronx": Image.open(os.path.join(borough_image_path, "Bronx.jpg")),
+    "Staten Island": Image.open(os.path.join(borough_image_path, "Staten_Island.jpg"))
 }
 
 # 顏色定義
@@ -116,10 +104,10 @@ app.layout = html.Div([
                             "flex": "1",
                             "backgroundColor":"white",
                             "padding": "15px",
-                            "borderRadius":"8px",
-                            "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
+                            "borderRadius":"10px",
+                            "boxShadow": "0 2px 10px rgba(0,0,0,0.1)",
                             "marginLeft":"100px",
-                            "width":"87%"
+                            "width":"100%"
                         })       
             ])
         ], style={
@@ -340,7 +328,7 @@ def update_borough_details(selected_borough):
     
     return html.Div([
         html.H3("Best Investment Borough", 
-            style={"fontSize": "28px","textAlign": "left", "color": "#333", "marginBottom": "20px"}),
+               style={"fontSize": "28px","textAlign": "left", "color": "#333", "marginBottom": "20px"}),
         html.Div([
             html.P([
                 "Total Listings: ",
@@ -354,19 +342,7 @@ def update_borough_details(selected_borough):
                 "Crime Rank: ",
                 html.Strong(f"{selected_borough['crime_rank']}")
             ], style={"marginBottom": "10px"}),
-        ], style={"fontSize": "20px"}),  # 加上逗號
-        html.Div([
-            html.Img(
-                src=borough_images[selected_borough['name']],
-                style={
-                    "width": "100%",
-                    "height": "100%",
-                    "objectFit": "cover",
-                    "borderRadius": "8px",
-                    "maxHeight": "350px"
-                }
-            )
-        ], style={"width": "65%", "overflow": "hidden"})
+        ], style={"fontSize": "20px"})
     ])
 
 @app.callback(
@@ -383,7 +359,7 @@ def update_selected_boroughs(clickData, current_selections):
     details_content = html.Div("Select a borough to see details", 
                              style={"textAlign": "center", "color": "gray"})
     
-    borough_image_path = "image"
+    borough_image_path = os.getenv("BOROUGH_IMAGES_PATH")
 
 
     if clickData is None:
@@ -455,7 +431,7 @@ def update_selected_boroughs(clickData, current_selections):
                         src=borough_images[top_borough['name']],
                         style={
                             "width": "100%",
-                            "height": "300px",
+                            "height": "100%",
                             "objectFit": "cover",
                             "borderRadius": "8px",
                             "maxHeight": "350px",
@@ -546,8 +522,8 @@ def remove_borough_card(n_clicks, current_selections):
                    html.Img(
                        src=borough_images[top_borough['name']],
                        style={
-                           "width": "100%",
-                           "height": "300px",
+                           "width": "500px",
+                           "height": "400px",
                            "objectFit": "cover",
                            "borderRadius": "8px"
                        }
@@ -574,5 +550,5 @@ def remove_borough_card(n_clicks, current_selections):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run_server(debug=True)
         

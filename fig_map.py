@@ -2,44 +2,28 @@ import dash
 from dash import dcc, html
 import pandas as pd
 import plotly.graph_objects as go
-from PIL import Image
-import sqlite3
-from dotenv import load_dotenv
 import os
+import base64
 
 def create_map_figure():
     """創建地圖圖表的函數"""
-    # read env path
-    dotenv_path = os.getenv("DOTENV_PATH")
-    load_dotenv(dotenv_path=dotenv_path)
-    db_path = os.getenv("DB_PATH")
-    image_path = os.getenv("IMAGE_PATH")
+    # 讀取地圖背景圖片
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    image_path = os.path.join(current_dir, 'assets', 'images', 'map_final.jpg')
+    
+    with open(image_path, 'rb') as image_file:
+        encoded_image = base64.b64encode(image_file.read()).decode()
+    
+    # 創建數據
+    borough_data = {
+        "Manhattan": {"listings_count": 8038, "tourism_value": 32831},
+        "Brooklyn": {"listings_count": 7717, "tourism_value": 2973},
+        "Queens": {"listings_count": 3753, "tourism_value": 9938},
+        "Bronx": {"listings_count": 948, "tourism_value": 955},
+        "Staten Island": {"listings_count": 373, "tourism_value": 456}
+    }
 
-    img = Image.open(image_path)
-    conn = sqlite3.connect(db_path)
-
-    # 查詢行政區房源數和觀光價值
-    query = """
-    SELECT 
-        b.borough_name AS borough, 
-        COUNT(l.listing_id) AS listings_count,
-        b.tourist_revenue AS tourism_value
-    FROM 
-        borough b
-    JOIN 
-        locations loc ON b.borough_id = loc.borough_id
-    JOIN 
-        listings l ON loc.listing_id = l.listing_id
-    GROUP BY 
-        b.borough_id, b.borough_name;
-    """
-    df = pd.read_sql_query(query, conn)
-    conn.close()
-
-    # 提取資料，轉換為字典結構
-    data_dict = df.set_index("borough").to_dict(orient="index")
-
-    # 五大行政區的位置（基於圖片像素座標）
+    # 五大行政區的位置
     positions = {
         "Bronx": (290, 86),
         "Brooklyn": (230, 290),
@@ -51,185 +35,83 @@ def create_map_figure():
     # 建立 Plotly 地圖
     fig_map = go.Figure()
 
-    # 設定圖片作為背景
+    # 設定背景圖片
     fig_map.update_layout(
-        images=[
-            dict(
-                source=img,
-                x=0, y=0, xref="x", yref="y",
-                sizex=500, sizey=400,  # 圖片尺寸
-                xanchor="left", yanchor="bottom",
-                layer="below"
+        images=[dict(
+            source=f'data:image/jpg;base64,{encoded_image}',
+            xref="paper",
+            yref="paper",
+            x=0,
+            y=1,
+            sizex=1,
+            sizey=1,
+            sizing="contain",  # 改為 "contain" 以保持長寬比
+            opacity=1,
+            layer="below"
+        )]
+    )
+
+    # 添加行政區互動點
+    for borough, pos in positions.items():
+        data = borough_data[borough]
+        listings_count = data["listings_count"]
+        tourism_value = data["tourism_value"]
+        
+        hover_text = (
+            f"<b>{borough}</b><br>"
+            f"Total Listing Count: {listings_count:,}<br>"
+            f"Expected Tourism Value: ${tourism_value:,}M"
+        )
+        
+        fig_map.add_trace(
+            go.Scatter(
+                x=[pos[0]],
+                y=[400 - pos[1]],
+                mode="markers",
+                marker=dict(
+                    size=12,
+                    color="darkred",
+                    symbol="circle",
+                ),
+                hoverinfo="text",
+                hovertext=hover_text,
+                hoverlabel=dict(
+                    bgcolor="white",
+                    bordercolor="black",
+                    font=dict(size=12)
+                ),
+                customdata=[[borough, listings_count, tourism_value]],
+                name=borough
             )
-        ],
+        )
+
+    # 更新布局設定
+    fig_map.update_layout(
         xaxis=dict(
-            range=[0, 500], 
-            showgrid=False, 
-            zeroline=False, 
+            range=[0, 500],
+            showgrid=False,
+            zeroline=False,
             visible=False,
-            scaleanchor="y",
+            scaleanchor="y",  # 鎖定與 y 軸的比例
             constrain="domain"
         ),
         yaxis=dict(
-            range=[0, 400], 
-            showgrid=False, 
-            zeroline=False, 
+            range=[0, 400],
+            showgrid=False,
+            zeroline=False,
             visible=False,
             constrain="domain"
         ),
         showlegend=False,
         template="plotly_white",
-        width=500,   # 整體寬度
-        height=400,  # 整體高度
+        width=500,           # 增加寬度
+        height=400,          # 增加高度並保持比例
         margin=dict(l=0, r=0, t=0, b=0, pad=0),
         plot_bgcolor='rgba(0,0,0,0)',
-        paper_bgcolor='rgba(0,0,0,0)'
-    )
-
-    # 添加行政區互動點
-    for borough, pos in positions.items():
-        if borough in data_dict:
-            listings_count = data_dict[borough]["listings_count"]
-            tourism_value = data_dict[borough]["tourism_value"]
-            
-            hover_text = (
-                f"<b>{borough}</b><br>"
-                f"Total Listing Count: {listings_count:,}<br>"
-                f"Expected Tourism Value: ${tourism_value:,}M"
-            )
-            
-            fig_map.add_trace(
-                go.Scatter(
-                    x=[pos[0]],
-                    y=[400 - pos[1]],  # 反轉 y 座標
-                    mode="markers",
-                    marker=dict(
-                        size=12,
-                        color="darkred",
-                        symbol="circle",
-                    ),
-                    hoverinfo="text",
-                    hovertext=hover_text,
-                    hoverlabel=dict(
-                        bgcolor="white",
-                        bordercolor="black",
-                        font=dict(size=12)
-                    ),
-                    customdata=[[borough, listings_count, tourism_value]],
-                    name=borough
-                )
-            )
-
-    fig_map.update_layout(
+        paper_bgcolor='rgba(0,0,0,0)',
         hoverdistance=5,
         hovermode='closest',
         clickmode='event'
-    )
-    
-    return fig_map
-    """創建地圖圖表的函數"""
-    # read env path
-    dotenv_path = os.getenv("DOTENV_PATH")
-    load_dotenv(dotenv_path=dotenv_path)
-    db_path = os.getenv("DB_PATH")
-    image_path = os.getenv("IMAGE_PATH")
-
-    img = Image.open(image_path)
-    conn = sqlite3.connect(db_path)
-
-    # 查詢行政區房源數和觀光價值
-    query = """
-    SELECT 
-        b.borough_name AS borough, 
-        COUNT(l.listing_id) AS listings_count,
-        b.tourist_revenue AS tourism_value
-    FROM 
-        borough b
-    JOIN 
-        locations loc ON b.borough_id = loc.borough_id
-    JOIN 
-        listings l ON loc.listing_id = l.listing_id
-    GROUP BY 
-        b.borough_id, b.borough_name;
-    """
-    df = pd.read_sql_query(query, conn)
-    conn.close()
-
-    # 提取資料，轉換為字典結構
-    data_dict = df.set_index("borough").to_dict(orient="index")
-
-    # 五大行政區的位置（基於圖片像素座標）
-    positions = {
-        "Bronx": (290, 60),
-        "Brooklyn": (240, 280),
-        "Manhattan": (200, 165),
-        "Queens": (370, 200),
-        "Staten Island": (86, 344)
-    }
-
-    # 建立 Plotly 地圖
-    fig_map = go.Figure()
-
-    # 設定圖片作為背景
-    fig_map.update_layout(
-        images=[
-            dict(
-                source=img,
-                x=0, y=0, xref="x", yref="y",
-                sizex=550, sizey=440,  # 圖片尺寸
-                xanchor="left", yanchor="bottom",
-                layer="below"
-            )
-        ],
-        xaxis=dict(range=[0, 550], showgrid=False, zeroline=False, visible=False),
-        yaxis=dict(range=[0, 440], showgrid=False, zeroline=False, visible=False),
-        showlegend=False,
-        template="plotly_white",
-        width=550,  # 增加寬度
-        height=440,  # 增加高度
-        margin=dict(l=0, r=0, t=0, b=0)  # 移除邊距
-    )
-
-
-    # 添加行政區互動點
-    for borough, pos in positions.items():
-        if borough in data_dict:  # 確保 borough 名稱在 SQL 查詢結果中
-            listings_count = data_dict[borough]["listings_count"]
-            tourism_value = data_dict[borough]["tourism_value"]
-
-            hover_text = (
-                f"<b>{borough}</b><br>"
-                f"Total Listing Count: {listings_count:,}<br>"
-                f"Expected Tourism Value: ${tourism_value:,}M"
-            )
-            
-            # 添加圓形標記點
-            fig_map.add_trace(
-                go.Scatter(
-                    x=[pos[0]],
-                    y=[400 - pos[1]],  # 轉換 y 座標
-                    mode="markers",
-                    marker=dict(
-                        size=12,
-                        color="darkred",
-                        symbol="circle",
-                    ),
-                    hoverinfo="text",
-                    hovertext=hover_text,
-                    hoverlabel=dict(
-                        bgcolor="white",
-                        bordercolor="black",
-                        font=dict(size=12)
-                    ),
-                    customdata=[[borough, listings_count, tourism_value]],
-                    name=borough
-                )
-            )
-
-    fig_map.update_layout(
-        hoverdistance=5,  # 減少hover觸發距離
-        hovermode='closest',  # 確保只顯示最近的點的資訊
-        clickmode='event'  # 啟用點擊事件
     )
     
     return fig_map
@@ -243,7 +125,7 @@ if __name__ == "__main__":
             id="interactive-map",
             figure=create_map_figure(),
             config={"displayModeBar": False},
-            style={"width": "400px", "height": "320px", "margin": "auto"}
+            style={"width": "700px", "height": "560px", "margin": "auto"}  # 調整顯示尺寸
         )
     ])
     app.run_server(debug=True)

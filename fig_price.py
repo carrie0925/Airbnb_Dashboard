@@ -3,19 +3,14 @@ from dash import dcc, html
 import pandas as pd
 import plotly.graph_objects as go
 import sqlite3
-from dotenv import load_dotenv
 import os
 
 def create_price_figure(selected_boroughs=None):
     """創建房價和房源數量分析圖表"""
     try:
-        # 載入環境變數
-        load_dotenv()
-        
-        # 資料庫連接與查詢
-        db_path = os.getenv("DB_PATH")
-        if not db_path:
-            raise ValueError("DB_PATH environment variable not found")
+        # 使用相對路徑找到資料庫
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        db_path = os.path.join(current_dir, "db_final.db")
             
         conn = sqlite3.connect(db_path)
         
@@ -111,22 +106,14 @@ def create_price_figure(selected_boroughs=None):
                 overlaying="y",
                 side="right",
                 showgrid=False,
-                zeroline=False
+                zeroline=False,
+                tickformat="$,.0f"  # 添加美元符號和千位分隔符
             ),
-            #   legend=dict(
-            #     title="",
-            #     orientation="h",
-            #     yanchor="bottom",
-            #     y=1.02,
-            #     xanchor="center",
-            #     x=0.5,
-            #     font=dict(size=12),
-            #     tracegroupgap=50
-            # ),
-            showlegend=False,  # 完全禁用圖例
+            showlegend=False,
             template="plotly_white",
             height=400,
-            margin=dict(l=50, r=50, t=80, b=50)
+            margin=dict(l=50, r=50, t=80, b=50),
+            hovermode='x unified'  # 改善 hover 效果
         )
 
         return fig
@@ -146,11 +133,15 @@ def create_price_figure(selected_boroughs=None):
         )
         return fig
 
+# 測試用主程式
 if __name__ == "__main__":
     app = dash.Dash(__name__)
     app.layout = html.Div([
         html.H2("Price Analysis by Borough", 
                 style={'text-align': 'center'}),
-        dcc.Graph(figure=create_price_figure())
+        dcc.Graph(
+            figure=create_price_figure(),
+            config={"displayModeBar": False}
+        )
     ])
     app.run_server(debug=True)
