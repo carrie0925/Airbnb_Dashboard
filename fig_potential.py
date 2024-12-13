@@ -7,12 +7,20 @@ import os
 
 def create_potential_figure():
     """創建觀光收入和安全評分比較圖表"""
-    # 使用相對路徑找到資料庫
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    db_path = os.path.join(current_dir, "db_final.db")
-    
     try:
-        # 建立資料庫連接
+        # 使用相對路徑找到資料庫
+        def get_db_path():
+            """獲取數據庫路徑"""
+            if os.environ.get('ENV') == 'production':
+                # Heroku 環境
+                return os.path.join(os.getcwd(), 'db_final.db')
+            else:
+                # 本地開發環境
+                current_dir = os.path.dirname(os.path.abspath(__file__))
+                return os.path.join(current_dir, 'db_final.db')
+                db_path = os.path.join(current_dir, "db_final.db")
+            
+        db_path = get_db_path()
         conn = sqlite3.connect(db_path)
         
         # SQL查詢，結合 borough 和 security 表格

@@ -9,9 +9,18 @@ def create_price_figure(selected_boroughs=None):
     """創建房價和房源數量分析圖表"""
     try:
         # 使用相對路徑找到資料庫
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        db_path = os.path.join(current_dir, "db_final.db")
+        def get_db_path():
+            """獲取數據庫路徑"""
+            if os.environ.get('ENV') == 'production':
+                # Heroku 環境
+                return os.path.join(os.getcwd(), 'db_final.db')
+            else:
+                # 本地開發環境
+                current_dir = os.path.dirname(os.path.abspath(__file__))
+                return os.path.join(current_dir, 'db_final.db')
+                db_path = os.path.join(current_dir, "db_final.db")
             
+        db_path = get_db_path()
         conn = sqlite3.connect(db_path)
         
         # Base query
