@@ -550,5 +550,5 @@ def remove_borough_card(n_clicks, current_selections):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run(debug=True)
         
